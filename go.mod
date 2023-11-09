@@ -3,14 +3,14 @@ module github.com/DataTunerX/finetune-experiment-controller
 go 1.19
 
 require (
-	github.com/DataTunerX/meta-server v0.0.0-20231031030312-bf09e1ab9bfd
+	github.com/DataTunerX/meta-server v0.0.0-20231107034500-5fd65a976d7f
+	github.com/DataTunerX/utility-server v0.0.0-20231107081331-e4ac0bbd2db2
 	github.com/go-logr/zapr v1.2.3
 	github.com/onsi/ginkgo/v2 v2.6.0
 	github.com/onsi/gomega v1.24.1
 	github.com/operator-framework/operator-lib v0.11.0
 	github.com/spf13/pflag v1.0.5
 	github.com/spf13/viper v1.17.0
-	go.uber.org/zap v1.24.0
 	k8s.io/apimachinery v0.26.0
 	k8s.io/client-go v0.26.0
 	sigs.k8s.io/controller-runtime v0.14.1
@@ -58,7 +58,8 @@ require (
 	github.com/spf13/cast v1.5.1 // indirect
 	github.com/subosito/gotenv v1.6.0 // indirect
 	go.uber.org/atomic v1.9.0 // indirect
-	go.uber.org/multierr v1.9.0 // indirect
+	go.uber.org/multierr v1.10.0 // indirect
+	go.uber.org/zap v1.26.0 // indirect
 	golang.org/x/exp v0.0.0-20230905200255-921286631fa9 // indirect
 	golang.org/x/net v0.15.0 // indirect
 	golang.org/x/oauth2 v0.12.0 // indirect

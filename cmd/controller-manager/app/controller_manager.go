@@ -4,10 +4,12 @@ import (
 	"context"
 	"os"
 
+	"github.com/DataTunerX/utility-server/logging"
+
 	"github.com/DataTunerX/finetune-experiment-controller/cmd/controller-manager/app/options"
-	finetunecontrollers "github.com/DataTunerX/finetune-experiment-controller/controllers/finetune"
-	"github.com/DataTunerX/finetune-experiment-controller/pkg/logging"
+	"github.com/DataTunerX/finetune-experiment-controller/internal/controller/finetune"
 	corev1beta1 "github.com/DataTunerX/meta-server/api/core/v1beta1"
+	extensionv1beta1 "github.com/DataTunerX/meta-server/api/extension/v1beta1"
 	finetunev1beta1 "github.com/DataTunerX/meta-server/api/finetune/v1beta1"
 	"github.com/go-logr/zapr"
 	"github.com/operator-framework/operator-lib/leader"
@@ -32,6 +34,7 @@ func init() {
 	utilruntime.Must(clientgoscheme.AddToScheme(scheme))
 	utilruntime.Must(finetunev1beta1.AddToScheme(scheme))
 	utilruntime.Must(corev1beta1.AddToScheme(scheme))
+	utilruntime.Must(extensionv1beta1.AddToScheme(scheme))
 	//+kubebuilder:scaffold:scheme
 }
 
@@ -67,7 +70,7 @@ func NewControllerManager() (manager.Manager, error) {
 		ctrOption.RetryPeriod = &opts.LeaderElectLeaseConfig.RetryPeriod
 		ctrOption.RenewDeadline = &opts.LeaderElectLeaseConfig.RenewDeadline
 		ctrOption.LeaseDuration = &opts.LeaderElectLeaseConfig.LeaseDuration
-		ctrOption.LeaderElectionNamespace = "default"
+		ctrOption.LeaderElectionNamespace = opts.LeaderElectLeaseConfig.LeaderElectionNamespace
 	}
 
 	mgr, err := ctrl.NewManager(ctrl.GetConfigOrDie(), ctrOption)
@@ -76,16 +79,18 @@ func NewControllerManager() (manager.Manager, error) {
 		return nil, err
 	}
 
-	if err = (&finetunecontrollers.FinetuneExperimentReconciler{
+	if err = (&finetune.FinetuneExperimentReconciler{
 		Client: mgr.GetClient(),
 		Scheme: mgr.GetScheme(),
+		Log:    logging.ZLogger,
 	}).SetupWithManager(mgr); err != nil {
 		logging.ZLogger.Errorf("Unable to create FinetuneExperiment controller, %v", err)
 		return nil, err
 	}
-	if err = (&finetunecontrollers.FinetuneJobReconciler{
+	if err = (&finetune.FinetuneJobReconciler{
 		Client: mgr.GetClient(),
 		Scheme: mgr.GetScheme(),
+		Log:    logging.ZLogger,
 	}).SetupWithManager(mgr); err != nil {
 		logging.ZLogger.Errorf("Unable to create FinetuneJob controller, %v", err)
 		return nil, err
