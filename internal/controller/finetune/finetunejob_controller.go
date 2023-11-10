@@ -31,11 +31,14 @@ import (
 	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/apimachinery/pkg/types"
 	ctrl "sigs.k8s.io/controller-runtime"
+	"sigs.k8s.io/controller-runtime/pkg/builder"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 	"sigs.k8s.io/controller-runtime/pkg/controller"
 	"sigs.k8s.io/controller-runtime/pkg/controller/controllerutil"
 	"sigs.k8s.io/controller-runtime/pkg/event"
+	"sigs.k8s.io/controller-runtime/pkg/handler"
 	"sigs.k8s.io/controller-runtime/pkg/predicate"
+	"sigs.k8s.io/controller-runtime/pkg/source"
 )
 
 // FinetuneJobReconciler reconciles a FinetuneJob object
@@ -63,7 +66,7 @@ func (r *FinetuneJobReconciler) Reconcile(ctx context.Context, req ctrl.Request)
 	finetuneJob := &finetunev1beta1.FinetuneJob{}
 	if err := r.Get(ctx, req.NamespacedName, finetuneJob); err != nil {
 		if errors.IsNotFound(err) {
-			r.Log.Errorf("FinetuneJob resource not found. Ignoring since object must be deleted.")
+			r.Log.Warnf("FinetuneJob resource not found. Ignoring since object must be deleted.")
 			return handlererr.HandlerErr(nil)
 		}
 		r.Log.Errorf("Failed get finetuneJob: %s/%s, Err: %v", req.Name, req.Namespace, err)
@@ -71,7 +74,7 @@ func (r *FinetuneJobReconciler) Reconcile(ctx context.Context, req ctrl.Request)
 	}
 
 	if finetuneJob.GetDeletionTimestamp() != nil {
-		r.Log.Infof("Start delete finetuneJob: %s/%s", req.Name, req.Namespace)
+		r.Log.Infof("Delete finetuneJob: %s/%s", req.Name, req.Namespace)
 		if controllerutil.ContainsFinalizer(finetuneJob, finetuneFinalizer) {
 			// todo cleaner
 			controllerutil.RemoveFinalizer(finetuneJob, finetuneFinalizer)
@@ -99,8 +102,8 @@ func (r *FinetuneJobReconciler) Reconcile(ctx context.Context, req ctrl.Request)
 		return handlererr.HandlerErr(err)
 	}
 	hyperparameter := &corev1beta1.Hyperparameter{}
-	if err := r.Client.Get(ctx, types.NamespacedName{Name: finetuneJob.Spec.FineTune.FinetuneSpec.Hyperparameter, Namespace: req.Namespace}, hyperparameter); err != nil {
-		r.Log.Errorf("Failed get hyperparameter: %s/%s, err: %v", finetuneJob.Spec.FineTune.FinetuneSpec.Hyperparameter, req.Namespace, err)
+	if err := r.Client.Get(ctx, types.NamespacedName{Name: finetuneJob.Spec.FineTune.FinetuneSpec.Hyperparameter.HyperparameterRef, Namespace: req.Namespace}, hyperparameter); err != nil {
+		r.Log.Errorf("Failed get hyperparameter: %s/%s, err: %v", finetuneJob.Spec.FineTune.FinetuneSpec.Hyperparameter.HyperparameterRef, req.Namespace, err)
 		return handlererr.HandlerErr(err)
 	}
 	dataset := &extensionv1beta1.Dataset{}
@@ -111,21 +114,42 @@ func (r *FinetuneJobReconciler) Reconcile(ctx context.Context, req ctrl.Request)
 	// Phase II of the fine-tuning exercise.
 	// Generate finetune CR.
 	finetune := generate.GenerateFinetune(finetuneJob)
-	r.Log.Infof("Starting to send down finetune: %s/%s.", finetune.Name, finetune.Namespace)
-	if err := ctrl.SetControllerReference(finetuneJob, finetune, r.Scheme); err != nil {
-		r.Log.Errorf("Set owner failed: %v", err)
-		return handlererr.HandlerErr(err)
-	}
-	if err := r.Client.Create(ctx, finetune); err != nil {
-		if !errors.IsAlreadyExists(err) {
-			r.Log.Errorf("Create finetune failed: %v", err)
-			return handlererr.HandlerErr(err)
+	existFinetune := &finetunev1beta1.Finetune{}
+	if err := r.Get(ctx, types.NamespacedName{
+		Name:      finetune.Name,
+		Namespace: finetune.Namespace,
+	}, existFinetune); err != nil {
+		if errors.IsNotFound(err) {
+			r.Log.Infof("Starting to send down finetune: %s/%s.", finetune.Name, finetune.Namespace)
+			if err := ctrl.SetControllerReference(finetuneJob, finetune, r.Scheme); err != nil {
+				r.Log.Errorf("Set owner failed: %v", err)
+				return handlererr.HandlerErr(err)
+			}
+			if err := r.Client.Create(ctx, finetune); err != nil {
+				if !errors.IsAlreadyExists(err) {
+					r.Log.Errorf("Create finetune failed: %v", err)
+					return handlererr.HandlerErr(err)
+				}
+			}
+			return ctrl.Result{RequeueAfter: 3 * time.Second}, nil
 		}
 	}
 	// Phase III of the fine-tuning exercise.
 	// Update finetunejob status.
+	if existFinetune.Status.State == finetunev1beta1.FinetuneSuccessful {
+		// Get llmCheckpoint Cr
+		llmCheckpoint := &corev1beta1.LLMCheckpoint{}
+		if err := r.Get(ctx, types.NamespacedName{Name: existFinetune.Status.LLMCheckpoint, Namespace: req.Namespace}, llmCheckpoint); err != nil {
+			r.Log.Errorf("Get llmCheckpoint %s/%s failed, err: %v", existFinetune.Status.LLMCheckpoint, req.Namespace, err)
+			return handlererr.HandlerErr(err)
+		}
+		// build llmCheckpoint image server. job
+
+	}
+
 	r.Log.Infof("update finetuneJob %s/%s status %s.", req.Name, req.Namespace, finetunev1beta1.FinetuneJobFinetune)
 	finetuneJob.Status.State = finetunev1beta1.FinetuneJobFinetune
+	finetuneJob.Status.FinetuneState = existFinetune.Status.State
 	if err := r.Client.Status().Update(ctx, finetuneJob); err != nil {
 		r.Log.Errorf("Update finetune status failed: %v", err)
 		return handlererr.HandlerErr(err)
@@ -138,8 +162,7 @@ func (r *FinetuneJobReconciler) Reconcile(ctx context.Context, req ctrl.Request)
 // SetupWithManager sets up the controller with the Manager.
 func (r *FinetuneJobReconciler) SetupWithManager(mgr ctrl.Manager) error {
 	return ctrl.NewControllerManagedBy(mgr).
-		For(&finetunev1beta1.FinetuneJob{}).
-		WithEventFilter(predicate.Funcs{
+		For(&finetunev1beta1.FinetuneJob{}, builder.WithPredicates(predicate.Funcs{
 			UpdateFunc: func(updateEvent event.UpdateEvent) bool {
 				oldFinetuneJob := updateEvent.ObjectOld.(*finetunev1beta1.FinetuneJob)
 				newFinetuneJob := updateEvent.ObjectNew.(*finetunev1beta1.FinetuneJob)
@@ -151,7 +174,26 @@ func (r *FinetuneJobReconciler) SetupWithManager(mgr ctrl.Manager) error {
 			DeleteFunc: func(deleteEvent event.DeleteEvent) bool {
 				return false
 			},
-		}).
+		})).
+		Watches(&source.Kind{Type: &finetunev1beta1.Finetune{}}, &handler.EnqueueRequestForOwner{
+			OwnerType:    &finetunev1beta1.FinetuneJob{},
+			IsController: true,
+		}, builder.WithPredicates(predicate.Funcs{
+			UpdateFunc: func(updateEvent event.UpdateEvent) bool {
+				oldFinetune := updateEvent.ObjectOld.(*finetunev1beta1.Finetune)
+				newFinetune := updateEvent.ObjectNew.(*finetunev1beta1.Finetune)
+				if oldFinetune.Status.State != newFinetune.Status.State {
+					r.Log.Infof("Get finetun %s/%s update event oldStatus: %s, newStatus: %s, skip", oldFinetune.Name, oldFinetune.Namespace, oldFinetune.Status.State, newFinetune.Status.State)
+					return true
+				}
+				return false
+			},
+			CreateFunc: func(createEvent event.CreateEvent) bool {
+				finetune := createEvent.Object.(*finetunev1beta1.Finetune)
+				r.Log.Infof("Get finetun %s/%s crate event, skip", finetune.Name, finetune.Namespace)
+				return false
+			},
+		})).
 		WithOptions(controller.Options{
 			CacheSyncTimeout:        10 * time.Second,
 			MaxConcurrentReconciles: 1}).

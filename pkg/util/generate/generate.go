@@ -4,6 +4,7 @@ import (
 	"fmt"
 
 	finetunev1beta1 "github.com/DataTunerX/meta-server/api/finetune/v1beta1"
+	batchv1 "k8s.io/api/batch/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
@@ -29,4 +30,10 @@ func GenerateFinetune(finetuneJob *finetunev1beta1.FinetuneJob) *finetunev1beta1
 		finetune.Spec.Resource = finetuneJob.Spec.FineTune.FinetuneSpec.Resource
 	}
 	return finetune
+}
+
+// todo(tigerK) add build image job
+func GenerateBuildImageJob() *batchv1.Job {
+	return &batchv1.Job{}
+
 }

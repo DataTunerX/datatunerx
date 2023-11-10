@@ -1,0 +1,59 @@
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRole
+metadata:
+  creationTimestamp: null
+  name: manager-role
+rules:
+- apiGroups:
+  - finetune.datatunerx.io
+  resources:
+  - finetuneexperiments
+  verbs:
+  - create
+  - delete
+  - get
+  - list
+  - patch
+  - update
+  - watch
+- apiGroups:
+  - finetune.datatunerx.io
+  resources:
+  - finetuneexperiments/finalizers
+  verbs:
+  - update
+- apiGroups:
+  - finetune.datatunerx.io
+  resources:
+  - finetuneexperiments/status
+  verbs:
+  - get
+  - patch
+  - update
+- apiGroups:
+  - finetune.datatunerx.io
+  resources:
+  - finetunejobs
+  verbs:
+  - create
+  - delete
+  - get
+  - list
+  - patch
+  - update
+  - watch
+- apiGroups:
+  - finetune.datatunerx.io
+  resources:
+  - finetunejobs/finalizers
+  verbs:
+  - update
+- apiGroups:
+  - finetune.datatunerx.io
+  resources:
+  - finetunejobs/status
+  verbs:
+  - get
+  - patch
+  - update
