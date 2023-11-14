@@ -18,6 +18,7 @@ package finetune
 
 import (
 	"context"
+	"fmt"
 	"time"
 
 	"github.com/DataTunerX/utility-server/logging"
@@ -75,6 +76,30 @@ func (r *FinetuneExperimentReconciler) Reconcile(ctx context.Context, req ctrl.R
 		err := r.Update(ctx, finetuneExperiment)
 		if err != nil {
 			r.Log.Errorf("Add finalizer failed: %s/%s, %v", req.Name, req.Namespace, err)
+			return handlererr.HandlerErr(err)
+		}
+	}
+
+	for i := range finetuneExperiment.Spec.FinetuneJobs {
+		finetuneJob := finetuneExperiment.Spec.FinetuneJobs[i]
+		if finetuneJob.Name == nil {
+			name := fmt.Sprintf("%s-%s", finetuneExperiment.Name, "finetunejob")
+			finetuneJob.Name = &name
+		}
+		finetuneJobInstance := &finetunev1beta1.FinetuneJob{}
+		finetuneJobInstance.Spec = finetuneJob.Spec
+		finetuneJobInstance.Name = *finetuneJob.Name
+		finetuneJobInstance.Namespace = finetuneExperiment.Namespace
+		if err := ctrl.SetControllerReference(finetuneExperiment, finetuneJobInstance, r.Scheme); err != nil {
+			r.Log.Errorf("SetControllerReference failed finetuneJob: %s/%s, owner finetuneExperiment: %s/%s, err: %v",
+				finetuneJobInstance.Name, finetuneJobInstance.Namespace, finetuneExperiment.Name, finetuneExperiment.Namespace, err)
+			return handlererr.HandlerErr(err)
+		}
+		if err := r.Client.Create(ctx, finetuneJobInstance); err != nil {
+			if errors.IsAlreadyExists(err) {
+				return handlererr.HandlerErr(nil)
+			}
+			r.Log.Errorf("Create finetuneJob %s/%s failed: %v", finetuneJobInstance.Name, finetuneJobInstance.Namespace, err)
 			return handlererr.HandlerErr(err)
 		}
 	}

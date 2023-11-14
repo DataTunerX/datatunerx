@@ -18,9 +18,11 @@ package finetune
 
 import (
 	"context"
+	"fmt"
 	"reflect"
 	"time"
 
+	"github.com/DataTunerX/finetune-experiment-controller/pkg/config"
 	"github.com/DataTunerX/finetune-experiment-controller/pkg/util/generate"
 	"github.com/DataTunerX/finetune-experiment-controller/pkg/util/handlererr"
 	corev1beta1 "github.com/DataTunerX/meta-server/api/core/v1beta1"
@@ -144,10 +146,25 @@ func (r *FinetuneJobReconciler) Reconcile(ctx context.Context, req ctrl.Request)
 			return handlererr.HandlerErr(err)
 		}
 		// build llmCheckpoint image server. job
-
+		endpoint := config.GetS3Endpoint()
+		accesskeyId := config.GetS3AccesskeyId()
+		accessSecretkey := config.GetS3ESecretAccessKey()
+		bucket := config.GetS3Bucket()
+		filePath := config.GetS3FilePath()
+		secure := config.GetSecure()
+		image := "release.daocloud.io/datatunerx/buildimage:v0.0.1"
+		buildImageName := fmt.Sprintf("%s-buildimage", finetuneJob.Name)
+		buildImageJob := generate.GenerateBuildImageJob(buildImageName, finetuneJob.Namespace,
+			endpoint, accesskeyId, accessSecretkey, bucket, filePath, secure, image)
+		if err := r.Client.Create(ctx, buildImageJob); err != nil {
+			if !errors.IsAlreadyExists(err) {
+				r.Log.Errorf("Create job %s/%s failed, err: %v", buildImageJob.Name, buildImageJob.Namespace, err)
+				return handlererr.HandlerErr(err)
+			}
+		}
 	}
 
-	r.Log.Infof("update finetuneJob %s/%s status %s.", req.Name, req.Namespace, finetunev1beta1.FinetuneJobFinetune)
+	r.Log.Infof("Update finetuneJob %s/%s status %s.", req.Name, req.Namespace, finetunev1beta1.FinetuneJobFinetune)
 	finetuneJob.Status.State = finetunev1beta1.FinetuneJobFinetune
 	finetuneJob.Status.FinetuneState = existFinetune.Status.State
 	if err := r.Client.Status().Update(ctx, finetuneJob); err != nil {
