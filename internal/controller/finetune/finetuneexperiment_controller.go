@@ -22,6 +22,7 @@ import (
 	"time"
 
 	"github.com/DataTunerX/utility-server/logging"
+	"k8s.io/apimachinery/pkg/types"
 
 	"github.com/DataTunerX/finetune-experiment-controller/pkg/util/handlererr"
 	finetunev1beta1 "github.com/DataTunerX/meta-server/api/finetune/v1beta1"
@@ -40,10 +41,6 @@ type FinetuneExperimentReconciler struct {
 	Log    logging.Logger
 }
 
-const (
-	finetuneFinalizer = "finetune.datatunerx.io/finalizer"
-)
-
 //+kubebuilder:rbac:groups=finetune.datatunerx.io,resources=finetuneexperiments,verbs=get;list;watch;create;update;patch;delete
 //+kubebuilder:rbac:groups=finetune.datatunerx.io,resources=finetuneexperiments/status,verbs=get;update;patch
 //+kubebuilder:rbac:groups=finetune.datatunerx.io,resources=finetuneexperiments/finalizers,verbs=update
@@ -61,9 +58,9 @@ func (r *FinetuneExperimentReconciler) Reconcile(ctx context.Context, req ctrl.R
 	}
 
 	if finetuneExperiment.GetDeletionTimestamp() != nil {
-		if controllerutil.ContainsFinalizer(finetuneExperiment, finetuneFinalizer) {
+		if controllerutil.ContainsFinalizer(finetuneExperiment, finetunev1beta1.FinetuneGroupFinalizer) {
 			// todo cleaner
-			controllerutil.RemoveFinalizer(finetuneExperiment, finetuneFinalizer)
+			controllerutil.RemoveFinalizer(finetuneExperiment, finetunev1beta1.FinetuneGroupFinalizer)
 			if err := r.Update(ctx, finetuneExperiment); err != nil {
 				r.Log.Errorf("Remove finalizer failed: %s/%s, Err: %v", req.Name, req.Namespace, err)
 				return handlererr.HandlerErr(err)
@@ -71,13 +68,22 @@ func (r *FinetuneExperimentReconciler) Reconcile(ctx context.Context, req ctrl.R
 		}
 		return handlererr.HandlerErr(nil)
 	}
-	if !controllerutil.ContainsFinalizer(finetuneExperiment, finetuneFinalizer) {
-		controllerutil.AddFinalizer(finetuneExperiment, finetuneFinalizer)
+	if !controllerutil.ContainsFinalizer(finetuneExperiment, finetunev1beta1.FinetuneGroupFinalizer) {
+		controllerutil.AddFinalizer(finetuneExperiment, finetunev1beta1.FinetuneGroupFinalizer)
 		err := r.Update(ctx, finetuneExperiment)
 		if err != nil {
 			r.Log.Errorf("Add finalizer failed: %s/%s, %v", req.Name, req.Namespace, err)
 			return handlererr.HandlerErr(err)
 		}
+	}
+
+	if finetuneExperiment.Spec.Pending {
+		finetuneExperiment.Status.State = finetunev1beta1.FinetuneExperimentPending
+		if err := r.Client.Status().Update(ctx, finetuneExperiment); err != nil {
+			r.Log.Errorf("Update fineExperiment %s/%s status failed", finetuneExperiment.Name, finetuneExperiment.Namespace)
+			return handlererr.HandlerErr(err)
+		}
+		return handlererr.HandlerErr(nil)
 	}
 
 	for i := range finetuneExperiment.Spec.FinetuneJobs {
@@ -96,14 +102,42 @@ func (r *FinetuneExperimentReconciler) Reconcile(ctx context.Context, req ctrl.R
 			return handlererr.HandlerErr(err)
 		}
 		if err := r.Client.Create(ctx, finetuneJobInstance); err != nil {
-			if errors.IsAlreadyExists(err) {
-				return handlererr.HandlerErr(nil)
+			if !errors.IsAlreadyExists(err) {
+				r.Log.Errorf("Create finetuneJob %s/%s failed: %v", finetuneJobInstance.Name, finetuneJobInstance.Namespace, err)
+				return handlererr.HandlerErr(err)
 			}
-			r.Log.Errorf("Create finetuneJob %s/%s failed: %v", finetuneJobInstance.Name, finetuneJobInstance.Namespace, err)
+		}
+		existFinetuneJob := &finetunev1beta1.FinetuneJob{}
+		if err := r.Client.Get(ctx, types.NamespacedName{
+			Name:      *finetuneJob.Name,
+			Namespace: finetuneExperiment.Namespace,
+		}, existFinetuneJob); err != nil {
+			r.Log.Errorf("Get finetuneJob failed: %v", err)
 			return handlererr.HandlerErr(err)
 		}
+		alreadyExists := false
+
+		// Iterate over the JobsStatus to check if existFinetuneJob.Name exists
+		for _, jobStatus := range finetuneExperiment.Status.JobsStatus {
+			if jobStatus.Name == existFinetuneJob.Name {
+				alreadyExists = true
+				break
+			}
+		}
+		if !alreadyExists {
+			finetuneExperiment.Status.JobsStatus = append(finetuneExperiment.Status.JobsStatus, finetunev1beta1.FinetuneJobStatusSetting{
+				Name:              existFinetuneJob.Name,
+				FinetuneJobStatus: existFinetuneJob.Status,
+			})
+		}
+
 	}
-	return ctrl.Result{}, nil
+	finetuneExperiment.Status.State = finetunev1beta1.FinetuneExperimentProcessing
+	if err := r.Client.Status().Update(ctx, finetuneExperiment); err != nil {
+		r.Log.Errorf("Update fineExperiment %s/%s status failed", finetuneExperiment.Name, finetuneExperiment.Namespace)
+		return handlererr.HandlerErr(err)
+	}
+	return handlererr.HandlerErr(nil)
 }
 
 // SetupWithManager sets up the controller with the Manager.
