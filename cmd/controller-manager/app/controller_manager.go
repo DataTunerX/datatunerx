@@ -13,6 +13,7 @@ import (
 	finetunev1beta1 "github.com/DataTunerX/meta-server/api/finetune/v1beta1"
 	"github.com/go-logr/zapr"
 	"github.com/operator-framework/operator-lib/leader"
+	rayv1 "github.com/ray-project/kuberay/ray-operator/apis/ray/v1"
 	"github.com/spf13/pflag"
 	"k8s.io/apimachinery/pkg/runtime"
 	utilruntime "k8s.io/apimachinery/pkg/util/runtime"
@@ -35,6 +36,7 @@ func init() {
 	utilruntime.Must(finetunev1beta1.AddToScheme(scheme))
 	utilruntime.Must(corev1beta1.AddToScheme(scheme))
 	utilruntime.Must(extensionv1beta1.AddToScheme(scheme))
+	utilruntime.Must(rayv1.AddToScheme(scheme))
 	//+kubebuilder:scaffold:scheme
 }
 
