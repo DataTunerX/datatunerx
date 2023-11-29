@@ -1,14 +1,27 @@
 package label
 
 const (
-	LabelDefaultComponent   = "finetunejob"
-	LabelDefaultKey         = "finetune.datatunerx.io/component"
+	LabelInstanceKey        = "finetune.datatunerx.io/instance"
+	LabelDatatunerx         = "datatunerx"
+	LabelFinetuneJob        = "finetunejob"
+	LabelFinetune           = "finetune"
+	LabelFinetuneExperiment = "finetuneexperiment"
+	LabelComponentKey       = "finetune.datatunerx.io/component"
+	LabelPartOfKey          = "finetune.datatunerx.io/part-of"
 	LabelFinetuneBindingKey = "finetune.datatunerx.io/finetunebinding"
 )
 
+func GenerateInstanceLabel(instanceName string) map[string]string {
+	baseLabel := GetBaseLabel()
+	return MergeLabel(baseLabel, map[string]string{
+		LabelInstanceKey:  instanceName,
+		LabelComponentKey: LabelFinetuneJob,
+	})
+}
+
 func GetBaseLabel() map[string]string {
 	return map[string]string{
-		LabelDefaultKey: LabelDefaultComponent,
+		LabelPartOfKey: LabelDatatunerx,
 	}
 }
 

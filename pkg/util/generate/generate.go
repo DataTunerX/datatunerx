@@ -3,6 +3,7 @@ package generate
 import (
 	"fmt"
 
+	"github.com/DataTunerX/finetune-experiment-controller/pkg/config"
 	corev1beta1 "github.com/DataTunerX/meta-server/api/core/v1beta1"
 	extensionv1beta1 "github.com/DataTunerX/meta-server/api/extension/v1beta1"
 	finetunev1beta1 "github.com/DataTunerX/meta-server/api/finetune/v1beta1"
@@ -14,14 +15,26 @@ import (
 	"k8s.io/apimachinery/pkg/util/intstr"
 )
 
+const (
+	defaultFinetuneImage = "rayproject/ray271-llama2-7b-finetune:20231124"
+	// todo llm file path
+	defaultFinetuneCodePath = "/tmp/llama2-7b/"
+	zeroString              = ""
+
+	defaultBuildImageJobContainerName = "imagebuild"
+	defaultBuildImageJobImage         = "release.daocloud.io/datatunerx/buildimage:v0.0.1"
+)
+
 func GenerateFinetune(finetuneJob *finetunev1beta1.FinetuneJob) *finetunev1beta1.Finetune {
-	if finetuneJob.Spec.FineTune.Name == nil {
-		name := fmt.Sprintf("%s-%s", finetuneJob.Name, "finetune")
-		finetuneJob.Spec.FineTune.Name = &name
+	if finetuneJob.Spec.FineTune.Name == "" {
+		finetuneJob.Spec.FineTune.Name = fmt.Sprintf("%s-%s", finetuneJob.Name, "finetune")
+	}
+	if finetuneJob.Spec.FineTune.FinetuneSpec.Node <= 0 {
+		finetuneJob.Spec.FineTune.FinetuneSpec.Node = 2
 	}
 	finetune := &finetunev1beta1.Finetune{
 		ObjectMeta: metav1.ObjectMeta{
-			Name:      *finetuneJob.Spec.FineTune.Name,
+			Name:      finetuneJob.Spec.FineTune.Name,
 			Namespace: finetuneJob.Namespace,
 		},
 		Spec: finetunev1beta1.FinetuneSpec{
@@ -35,12 +48,17 @@ func GenerateFinetune(finetuneJob *finetunev1beta1.FinetuneJob) *finetunev1beta1
 	if finetuneJob.Spec.FineTune.FinetuneSpec.Resource != nil {
 		finetune.Spec.Resource = finetuneJob.Spec.FineTune.FinetuneSpec.Resource
 	}
+	if finetuneJob.Spec.FineTune.FinetuneSpec.Image.Name == zeroString {
+		finetune.Spec.Image.Name = defaultFinetuneImage
+	}
+	if finetuneJob.Spec.FineTune.FinetuneSpec.Image.Path == zeroString {
+		finetune.Spec.Image.Path = defaultFinetuneCodePath
+	}
 	return finetune
 }
 
 // todo(tigerK) add build image job
-func GenerateBuildImageJob(name, namespace, endpoint, accessKeyId, secretAccessKey,
-	bucket, filePath, image, secure, mountPath, registryUrl, repositoryName, username, password, imageName, imageTag string) *batchv1.Job {
+func GenerateBuildImageJob(name, namespace, filePath string) *batchv1.Job {
 	privileged := true
 	directory := corev1.HostPathDirectory
 	return &batchv1.Job{
@@ -53,23 +71,23 @@ func GenerateBuildImageJob(name, namespace, endpoint, accessKeyId, secretAccessK
 				Spec: corev1.PodSpec{
 					Containers: []corev1.Container{
 						{
-							Name:  "imagebuild",
-							Image: image,
+							Name:  defaultBuildImageJobContainerName,
+							Image: defaultBuildImageJobImage,
 							Env: []corev1.EnvVar{
 								{
 									Name:  "S3_ENDPOINT",
-									Value: endpoint,
+									Value: config.GetS3Endpoint(),
 								},
 								{Name: "S3_ACCESSKEYID",
-									Value: accessKeyId,
+									Value: config.GetS3AccesskeyId(),
 								},
 								{
 									Name:  "S3_SECRETACCESSKEY",
-									Value: secretAccessKey,
+									Value: config.GetS3ESecretAccessKey(),
 								},
 								{
 									Name:  "S3_BUCKET",
-									Value: bucket,
+									Value: config.GetS3Bucket(),
 								},
 								{
 									Name:  "S3_FILEPATH",
@@ -77,41 +95,41 @@ func GenerateBuildImageJob(name, namespace, endpoint, accessKeyId, secretAccessK
 								},
 								{
 									Name:  "S3_SECURE",
-									Value: secure,
+									Value: config.GetSecure(),
 								},
 								{
 									Name:  "MOUNT_PATH",
-									Value: mountPath,
+									Value: config.GetMountPath(),
 								},
 								{
 									Name:  "REGISTRY_URL",
-									Value: registryUrl,
+									Value: config.GetRegistryUrl(),
 								},
 								{
 									Name:  "REPOSITORY_NAME",
-									Value: repositoryName,
+									Value: config.GetRepositoryName(),
 								},
 								{
 									Name:  "USERNAME",
-									Value: username,
+									Value: config.GetUserName(),
 								},
 								{
 									Name:  "PASSWORD",
-									Value: password,
+									Value: config.GetPassword(),
 								},
 								{
 									Name:  "IMAGE_NAME",
-									Value: imageName,
+									Value: config.GetImageName(),
 								},
 								{
 									Name:  "IMAGE_TAG",
-									Value: imageTag,
+									Value: config.GetImageTag(),
 								},
 							},
 							VolumeMounts: []corev1.VolumeMount{
 								{
 									Name:      "data",
-									MountPath: "/var/lib/containers",
+									MountPath: config.GetMountPath(),
 								},
 							},
 							SecurityContext: &corev1.SecurityContext{
@@ -119,6 +137,7 @@ func GenerateBuildImageJob(name, namespace, endpoint, accessKeyId, secretAccessK
 							},
 						},
 					},
+					RestartPolicy: corev1.RestartPolicyNever,
 					Volumes: []corev1.Volume{
 						{
 							Name: "data",
@@ -134,9 +153,11 @@ func GenerateBuildImageJob(name, namespace, endpoint, accessKeyId, secretAccessK
 			},
 		},
 	}
+
 }
 
 func GenerateRayService(name, namespace, importPath, runtimeEnv, deploymentName string, numReplicas int32, numGpus float64, finetuneJob *finetunev1beta1.FinetuneJob, llmCheckpoint *corev1beta1.LLMCheckpoint) *rayv1.RayService {
+	// todo(tigerK) hardcode for rubbish
 	numReplica := &numReplicas
 	numGpu := &numGpus
 	enableInTreeAutoscaling := false
@@ -185,13 +206,18 @@ func GenerateRayService(name, namespace, importPath, runtimeEnv, deploymentName 
 				RayVersion:              "2.7.1",
 				EnableInTreeAutoscaling: &enableInTreeAutoscaling,
 				HeadGroupSpec: rayv1.HeadGroupSpec{
+					RayStartParams: map[string]string{
+						"dashboard-host": "0.0.0.0",
+						"num-gpus":       "0",
+					},
+					ServiceType: corev1.ServiceTypeNodePort,
 					Template: corev1.PodTemplateSpec{
 						Spec: corev1.PodSpec{
 							Containers: []corev1.Container{
 								{
 									Name:            fmt.Sprintf("%s-head", finetuneJob.Name),
 									Image:           *llmCheckpoint.Spec.CheckpointImage.Name,
-									ImagePullPolicy: *llmCheckpoint.Spec.CheckpointImage.ImagePullPolicy,
+									ImagePullPolicy: corev1.PullAlways,
 									Env: []corev1.EnvVar{
 										{
 											Name:  "RAY_SERVE_ENABLE_EXPERIMENTAL_STREAMING",
@@ -219,11 +245,11 @@ func GenerateRayService(name, namespace, importPath, runtimeEnv, deploymentName 
 									Resources: corev1.ResourceRequirements{
 										Limits: map[corev1.ResourceName]resource.Quantity{
 											corev1.ResourceCPU:    resource.MustParse("2"),
-											corev1.ResourceMemory: resource.MustParse("4Gi"),
+											corev1.ResourceMemory: resource.MustParse("16Gi"),
 										},
 										Requests: map[corev1.ResourceName]resource.Quantity{
 											corev1.ResourceCPU:    resource.MustParse("1"),
-											corev1.ResourceMemory: resource.MustParse("2Gi"),
+											corev1.ResourceMemory: resource.MustParse("8Gi"),
 										},
 									},
 								},
@@ -246,11 +272,19 @@ func GenerateRayService(name, namespace, importPath, runtimeEnv, deploymentName 
 									{
 										Name:            fmt.Sprintf("%s-work", finetuneJob.Name),
 										Image:           *llmCheckpoint.Spec.CheckpointImage.Name,
-										ImagePullPolicy: *llmCheckpoint.Spec.CheckpointImage.ImagePullPolicy,
+										ImagePullPolicy: corev1.PullAlways,
 										Env: []corev1.EnvVar{
 											{
 												Name:  "RAY_SERVE_ENABLE_EXPERIMENTAL_STREAMING",
 												Value: "1",
+											},
+											{
+												Name:  "BASE_MODEL_DIR",
+												Value: llmCheckpoint.Spec.CheckpointImage.LLMPath,
+											},
+											{
+												Name:  "CHECKPOINT_DIR",
+												Value: llmCheckpoint.Spec.CheckpointImage.CheckPointPath,
 											},
 										},
 										Lifecycle: &corev1.Lifecycle{
@@ -265,11 +299,11 @@ func GenerateRayService(name, namespace, importPath, runtimeEnv, deploymentName 
 										Resources: corev1.ResourceRequirements{
 											Limits: map[corev1.ResourceName]resource.Quantity{
 												corev1.ResourceCPU:    resource.MustParse("8"),
-												corev1.ResourceMemory: resource.MustParse("16Gi"),
+												corev1.ResourceMemory: resource.MustParse("64Gi"),
 											},
 											Requests: map[corev1.ResourceName]resource.Quantity{
 												corev1.ResourceCPU:    resource.MustParse("4"),
-												corev1.ResourceMemory: resource.MustParse("8Gi"),
+												corev1.ResourceMemory: resource.MustParse("32Gi"),
 											},
 										},
 									},
@@ -286,7 +320,7 @@ func GenerateRayService(name, namespace, importPath, runtimeEnv, deploymentName 
 
 }
 
-func GenerateBuiltInScoring(name, namespace string) *extensionv1beta1.Scoring {
+func GenerateBuiltInScoring(name, namespace, inference string) *extensionv1beta1.Scoring {
 	return &extensionv1beta1.Scoring{
 		ObjectMeta: metav1.ObjectMeta{
 			Name:      name,
@@ -299,11 +333,12 @@ func GenerateBuiltInScoring(name, namespace string) *extensionv1beta1.Scoring {
 					Reference: "小鸡炖蘑菇",
 				},
 			},
+			InferenceService: inference,
 		},
 	}
 }
 
-func GeneratePluginScoring(name, namespace, pluginName, parameters string) *extensionv1beta1.Scoring {
+func GeneratePluginScoring(name, namespace, pluginName, parameters, inference string) *extensionv1beta1.Scoring {
 	return &extensionv1beta1.Scoring{
 		ObjectMeta: metav1.ObjectMeta{
 			Name:      name,
@@ -315,6 +350,7 @@ func GeneratePluginScoring(name, namespace, pluginName, parameters string) *exte
 				Name:       pluginName,
 				Parameters: parameters,
 			},
+			InferenceService: inference,
 		},
 	}
 }
