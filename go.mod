@@ -3,7 +3,7 @@ module github.com/DataTunerX/finetune-experiment-controller
 go 1.19
 
 require (
-	github.com/DataTunerX/meta-server v0.0.0-20231116102108-24bd83a6be89
+	github.com/DataTunerX/meta-server v0.0.0-20231128065201-7109bd13c9cb
 	github.com/DataTunerX/utility-server v0.0.0-20231107081331-e4ac0bbd2db2
 	github.com/go-logr/zapr v1.2.3
 	github.com/operator-framework/operator-lib v0.11.0
