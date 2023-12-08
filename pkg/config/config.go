@@ -18,9 +18,8 @@ func init() {
 	config.BindEnv("repositoryName", "REPOSITORY_NAME")
 	config.BindEnv("userName", "USERNAME")
 	config.BindEnv("password", "PASSWORD")
-	config.BindEnv("imageName", "IMAGE_NAME")
-	config.BindEnv("imageTag", "IMAGE_TAG")
 	config.BindEnv("mountPath", "MOUNT_PATH")
+	config.BindEnv("baseImage", "BASE_IMAGE")
 }
 
 func GetS3Endpoint() string {
@@ -51,16 +50,12 @@ func GetUserName() string {
 	return config.GetString("userName")
 }
 
+func GetBaseImage() string {
+	return config.GetString("baseImage")
+}
+
 func GetPassword() string {
 	return config.GetString("password")
-}
-
-func GetImageName() string {
-	return config.GetString("imageName")
-}
-
-func GetImageTag() string {
-	return config.GetString("imageTag")
 }
 
 func GetRegistryUrl() string {

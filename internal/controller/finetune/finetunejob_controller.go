@@ -45,7 +45,6 @@ import (
 	"sigs.k8s.io/controller-runtime/pkg/event"
 	"sigs.k8s.io/controller-runtime/pkg/handler"
 	"sigs.k8s.io/controller-runtime/pkg/predicate"
-	"sigs.k8s.io/controller-runtime/pkg/source"
 )
 
 // FinetuneJobReconciler reconciles a FinetuneJob object
@@ -113,8 +112,6 @@ func (r *FinetuneJobReconciler) Reconcile(ctx context.Context, req ctrl.Request)
 		return handlererr.HandlerErr(err)
 	}
 
-	// Phase II of the fine-tuning exercise.
-	// Generate finetune CR.
 	existFinetune, err := r.reconcileFinetuneSend(ctx, finetuneJob)
 	if err != nil {
 		return handlererr.HandlerErr(err)
@@ -132,29 +129,8 @@ func (r *FinetuneJobReconciler) Reconcile(ctx context.Context, req ctrl.Request)
 		return handlererr.HandlerErr(err)
 	}
 
-	scoringName := fmt.Sprintf("%s-scoring", finetuneJob.Name)
-	scoring := &extensionv1beta1.Scoring{}
-	if err := r.Get(ctx, types.NamespacedName{
-		Name:      scoringName,
-		Namespace: finetuneJob.Namespace,
-	}, scoring); err != nil {
-		if errors.IsNotFound(err) {
-			r.Log.Infof("Scoring %s/%s not found, err: %v", scoringName, finetuneJob.Namespace, err)
-			return ctrl.Result{RequeueAfter: 30 * time.Second}, nil
-		}
-		r.Log.Errorf("Get scoring %s/%s failed: %v", scoringName, finetuneJob.Namespace, err)
+	if err := r.reconcileByScoringStatus(ctx, finetuneJob); err != nil {
 		return handlererr.HandlerErr(err)
-	}
-
-	// todo(tigerK) get scoring result, update finetuneJob status
-	if scoring.Status.Score != nil {
-		finetuneJob.Status.State = finetunev1beta1.FinetuneJobSuccessful
-		finetuneJob.Status.Result.Score = *scoring.Status.Score
-		finetuneJob.Status.Stats = metav1.Now().Format("2006-01-02 15:04:05")
-		if err := r.Client.Status().Update(ctx, finetuneJob); err != nil {
-			r.Log.Errorf("Update finetuneJob status failed: %v", err)
-			return handlererr.HandlerErr(err)
-		}
 	}
 
 	// Phase IIII of the fine-tuning exercise.
@@ -179,55 +155,51 @@ func (r *FinetuneJobReconciler) SetupWithManager(mgr ctrl.Manager) error {
 				return false
 			},
 		})).
-		Watches(&source.Kind{Type: &finetunev1beta1.Finetune{}}, &handler.EnqueueRequestForOwner{
-			OwnerType:    &finetunev1beta1.FinetuneJob{},
-			IsController: true,
-		}, builder.WithPredicates(predicate.Funcs{
-			UpdateFunc: func(updateEvent event.UpdateEvent) bool {
-				oldFinetune := updateEvent.ObjectOld.(*finetunev1beta1.Finetune)
-				newFinetune := updateEvent.ObjectNew.(*finetunev1beta1.Finetune)
-				if oldFinetune.Status.State != newFinetune.Status.State {
-					r.Log.Infof("Get finetun %s/%s update event oldStatus: %s, newStatus: %s", oldFinetune.Name, oldFinetune.Namespace, oldFinetune.Status.State, newFinetune.Status.State)
+		Watches(&finetunev1beta1.Finetune{},
+			handler.EnqueueRequestForOwner(mgr.GetScheme(), mgr.GetRESTMapper(), &finetunev1beta1.FinetuneJob{}, handler.OnlyControllerOwner()),
+			builder.WithPredicates(predicate.Funcs{
+				UpdateFunc: func(updateEvent event.UpdateEvent) bool {
+					oldFinetune := updateEvent.ObjectOld.(*finetunev1beta1.Finetune)
+					newFinetune := updateEvent.ObjectNew.(*finetunev1beta1.Finetune)
+					if oldFinetune.Status.State != newFinetune.Status.State {
+						r.Log.Infof("Get finetun %s/%s update event oldStatus: %s, newStatus: %s", oldFinetune.Name, oldFinetune.Namespace, oldFinetune.Status.State, newFinetune.Status.State)
+						return true
+					}
+					return false
+				},
+				CreateFunc: func(createEvent event.CreateEvent) bool {
+					finetune := createEvent.Object.(*finetunev1beta1.Finetune)
+					r.Log.Infof("Get finetun %s/%s crate event, skip", finetune.Name, finetune.Namespace)
+					return false
+				},
+			})).
+		Watches(&batchv1.Job{},
+			handler.EnqueueRequestForOwner(mgr.GetScheme(), mgr.GetRESTMapper(), &finetunev1beta1.FinetuneJob{}, handler.OnlyControllerOwner()),
+			builder.WithPredicates(predicate.NewPredicateFuncs(func(object client.Object) bool {
+				job := object.(*batchv1.Job)
+				if job.Status.CompletionTime != nil {
 					return true
 				}
 				return false
-			},
-			CreateFunc: func(createEvent event.CreateEvent) bool {
-				finetune := createEvent.Object.(*finetunev1beta1.Finetune)
-				r.Log.Infof("Get finetun %s/%s crate event, skip", finetune.Name, finetune.Namespace)
+			}))).
+		Watches(&rayv1.RayService{},
+			handler.EnqueueRequestForOwner(mgr.GetScheme(), mgr.GetRESTMapper(), &finetunev1beta1.FinetuneJob{}, handler.OnlyControllerOwner()),
+			builder.WithPredicates(predicate.NewPredicateFuncs(func(object client.Object) bool {
+				rayService := object.(*rayv1.RayService)
+				if rayService.Status.ServiceStatus == rayv1.Running {
+					return true
+				}
 				return false
-			},
-		})).
-		Watches(&source.Kind{Type: &batchv1.Job{}}, &handler.EnqueueRequestForOwner{
-			OwnerType:    &finetunev1beta1.FinetuneJob{},
-			IsController: true,
-		}, builder.WithPredicates(predicate.NewPredicateFuncs(func(object client.Object) bool {
-			job := object.(*batchv1.Job)
-			if job.Status.CompletionTime != nil {
-				return true
-			}
-			return false
-		}))).
-		Watches(&source.Kind{Type: &rayv1.RayService{}}, &handler.EnqueueRequestForOwner{
-			OwnerType:    &finetunev1beta1.FinetuneJob{},
-			IsController: true,
-		}, builder.WithPredicates(predicate.NewPredicateFuncs(func(object client.Object) bool {
-			rayService := object.(*rayv1.RayService)
-			if rayService.Status.ServiceStatus == rayv1.Running {
-				return true
-			}
-			return false
-		}))).
-		Watches(&source.Kind{Type: &extensionv1beta1.Scoring{}}, &handler.EnqueueRequestForOwner{
-			OwnerType:    &finetunev1beta1.FinetuneJob{},
-			IsController: true,
-		}, builder.WithPredicates(predicate.NewPredicateFuncs(func(object client.Object) bool {
-			scoring := object.(*extensionv1beta1.Scoring)
-			if scoring.Status.Score != nil {
-				return true
-			}
-			return false
-		}))).
+			}))).
+		Watches(&extensionv1beta1.Scoring{},
+			handler.EnqueueRequestForOwner(mgr.GetScheme(), mgr.GetRESTMapper(), &finetunev1beta1.FinetuneJob{}, handler.OnlyControllerOwner()),
+			builder.WithPredicates(predicate.NewPredicateFuncs(func(object client.Object) bool {
+				scoring := object.(*extensionv1beta1.Scoring)
+				if scoring.Status.Score != nil {
+					return true
+				}
+				return false
+			}))).
 		WithOptions(controller.Options{
 			CacheSyncTimeout:        10 * time.Second,
 			MaxConcurrentReconciles: 1}).
@@ -249,6 +221,7 @@ func (r *FinetuneJobReconciler) reconcilePreCondition(ctx context.Context, finet
 }
 
 func (r *FinetuneJobReconciler) reconcileFinetuneSend(ctx context.Context, finetuneJob *finetunev1beta1.FinetuneJob) (*finetunev1beta1.Finetune, error) {
+
 	specFinetuneInstance := generate.GenerateFinetune(finetuneJob)
 	existFinetuneInstance := &finetunev1beta1.Finetune{}
 	if err := r.Get(ctx, types.NamespacedName{
@@ -267,7 +240,7 @@ func (r *FinetuneJobReconciler) reconcileFinetuneSend(ctx context.Context, finet
 					return nil, err
 				}
 			}
-			return nil, fmt.Errorf("Finetune %s/%s creating, reReconcile", specFinetuneInstance.Namespace, specFinetuneInstance.Name)
+			return nil, valueobject.ErrRecalibrate
 		}
 	}
 	return existFinetuneInstance, nil
@@ -278,7 +251,7 @@ func (r *FinetuneJobReconciler) reconcileByFinetuneStatus(ctx context.Context, f
 	if finetuneInstance.Status.State == finetunev1beta1.FinetuneInit || finetuneInstance.Status.State == finetunev1beta1.FinetuneRunning {
 		r.Log.Infof("Update finetuneJob %s/%s status %s.", finetuneJobInstance.Namespace, finetuneJobInstance.Name, finetunev1beta1.FinetuneJobFinetune)
 		finetuneJobInstance.Status.State = finetunev1beta1.FinetuneJobFinetune
-		finetuneJobInstance.Status.FinetuneState = finetuneInstance.Status.State
+		finetuneJobInstance.Status.FinetuneStatus = &finetuneInstance.Status
 		if err := r.Client.Status().Update(ctx, finetuneJobInstance); err != nil {
 			r.Log.Errorf("Update finetuneJob %s/%s status failed: %v", finetuneJobInstance.Namespace, finetuneJobInstance.Name, err)
 			return err
@@ -297,22 +270,27 @@ func (r *FinetuneJobReconciler) reconcileByFinetuneStatus(ctx context.Context, f
 			return err
 		}
 		// build llmCheckpoint image server. job
-		buildImageJobName := fmt.Sprintf("%s-buildimage", finetuneJobInstance.Name)
+
+		imageName := fmt.Sprintf("ray271-llama2-7b-finetune-checkpoint-%s", finetuneJobInstance.Name)
+		imageTag := fmt.Sprintf("%s", time.Now().Format("20060102"))
 		checkPointFilePath := finetuneInstance.Status.LLMCheckpoint.CheckpointPath
 		checkPointFilePath = util.RemoveBucketName(checkPointFilePath, config.GetS3Bucket())
-		buildImageJob := generate.GenerateBuildImageJob(buildImageJobName, finetuneJobInstance.Namespace, checkPointFilePath)
+		buildImageJob := generate.GenerateBuildImageJob(checkPointFilePath, imageName, imageTag, finetuneJobInstance)
 		if err := ctrl.SetControllerReference(finetuneJobInstance, buildImageJob, r.Scheme); err != nil {
 			r.Log.Errorf("Set owner failed: %v", err)
 			return err
 		}
-		if err := r.Client.Create(ctx, buildImageJob); err != nil {
-			if !errors.IsAlreadyExists(err) {
-				r.Log.Errorf("Create job %s/%s failed, err: %v", buildImageJob.Name, buildImageJob.Namespace, err)
-				return err
+		if err := r.Client.Get(ctx, types.NamespacedName{Name: buildImageJob.Name, Namespace: buildImageJob.Namespace}, buildImageJob); err != nil {
+			if errors.IsNotFound(err) {
+				if err := r.Client.Create(ctx, buildImageJob); err != nil {
+					r.Log.Errorf("Create job %s/%s failed, err: %v", buildImageJob.Name, buildImageJob.Namespace, err)
+					return err
+				}
 			}
 		}
+
 		llmCheckpoint.Spec.CheckpointImage = &corev1beta1.CheckpointImage{}
-		llmImage := fmt.Sprintf("%s/%s/%s:%s", config.GetRegistryUrl(), config.GetRepositoryName(), config.GetImageName(), config.GetImageTag())
+		llmImage := fmt.Sprintf("%s/%s/%s:%s", config.GetRegistryUrl(), config.GetRepositoryName(), imageName, imageTag)
 		llmCheckpoint.Spec.CheckpointImage.Name = &llmImage
 		llmCheckpoint.Spec.CheckpointImage.CheckPointPath = fmt.Sprintf("/checkpoint/%s", checkPointFilePath)
 		llmCheckpoint.Spec.CheckpointImage.LLMPath = llmCheckpoint.Spec.Image.Path
@@ -322,7 +300,7 @@ func (r *FinetuneJobReconciler) reconcileByFinetuneStatus(ctx context.Context, f
 		}
 
 		finetuneJobInstance.Status.State = finetunev1beta1.FinetuneJobBuildImage
-		finetuneJobInstance.Status.FinetuneState = finetuneInstance.Status.State
+		finetuneJobInstance.Status.FinetuneStatus = &finetuneInstance.Status
 		if err := r.Client.Status().Update(ctx, finetuneJobInstance); err != nil {
 			r.Log.Errorf("Update finetuneJob %s/%s status failed: %v", finetuneJobInstance.Namespace, finetuneInstance.Name, err)
 			return err
@@ -331,7 +309,7 @@ func (r *FinetuneJobReconciler) reconcileByFinetuneStatus(ctx context.Context, f
 
 	if finetuneInstance.Status.State == finetunev1beta1.FinetuneFailed {
 		finetuneJobInstance.Status.State = finetunev1beta1.FinetuneJobFailed
-		finetuneJobInstance.Status.FinetuneState = finetuneInstance.Status.State
+		finetuneJobInstance.Status.FinetuneStatus = &finetuneInstance.Status
 		if err := r.Client.Status().Update(ctx, finetuneJobInstance); err != nil {
 			r.Log.Errorf("Update finetuneJob %s/%s status failed: %v", finetuneJobInstance.Namespace, finetuneInstance.Name, err)
 			return err
@@ -372,15 +350,18 @@ func (r *FinetuneJobReconciler) reconcileByJobStatus(ctx context.Context, finetu
 			r.Log.Errorf("Set owner failed: %v", err)
 			return err
 		}
-		if err := r.Create(ctx, rayService); err != nil {
-			if !errors.IsAlreadyExists(err) {
-				r.Log.Errorf("Create rayService %s/%s failed: %v", rayServiceName, finetuneJob.Namespace, err)
-				return err
+
+		if err := r.Client.Get(ctx, types.NamespacedName{Name: rayServiceName, Namespace: finetuneJob.Namespace}, rayService); err != nil {
+			if errors.IsNotFound(err) {
+				if err := r.Create(ctx, rayService); err != nil {
+					r.Log.Errorf("Create rayService %s/%s failed: %v", rayServiceName, finetuneJob.Namespace, err)
+					return err
+				}
 			}
 		}
-		r.Log.Infof("Send serve successful")
+
 		finetuneJob.Status.State = finetunev1beta1.FinetuneJobServe
-		finetuneJob.Status.FinetuneState = finetune.Status.State
+		finetuneJob.Status.FinetuneStatus = &finetune.Status
 		finetuneJob.Status.Result = &finetunev1beta1.FinetuneJobResult{
 			ModelExportResult: true,
 			Image:             *llmCheckpoint.Spec.CheckpointImage.Name,
@@ -404,17 +385,20 @@ func (r *FinetuneJobReconciler) reconcileByRayServiceStatus(ctx context.Context,
 		return err
 	}
 	if finetuneJob.Status.State == finetunev1beta1.FinetuneJobServe && rayService.Status.ServiceStatus == rayv1.Running {
-		//serveNodePort := rayService.Status.ActiveServiceStatus.RayClusterStatus.Endpoints["serve"]
-		//dashboardNodePort := rayService.Status.ActiveServiceStatus.RayClusterStatus.Endpoints["dashboard"]
-		finetuneJob.Status.Result.Serve = fmt.Sprintf("%s.%s.svc:%s", finetuneJob.Name, finetuneJob.Namespace, "8000")
-		finetuneJob.Status.Result.Dashboard = fmt.Sprintf("%s.%s.svc:%s", finetuneJob.Name, finetuneJob.Namespace, "8265")
+		if rayService.Status.ActiveServiceStatus.RayClusterStatus.Endpoints != nil {
+			serveNodePort := rayService.Status.ActiveServiceStatus.RayClusterStatus.Endpoints["serve"]
+			dashboardNodePort := rayService.Status.ActiveServiceStatus.RayClusterStatus.Endpoints["dashboard"]
+			finetuneJob.Status.Result.Serve = fmt.Sprintf("%s.%s.svc:%s", finetuneJob.Name, finetuneJob.Namespace, serveNodePort)
+			finetuneJob.Status.Result.Dashboard = fmt.Sprintf("%s.%s.svc:%s", finetuneJob.Name, finetuneJob.Namespace, dashboardNodePort)
+		}
+		infrencePath := fmt.Sprintf("http://%s/inference", finetuneJob.Status.Result.Serve)
 		if err := r.Client.Status().Update(ctx, finetuneJob); err != nil {
 			r.Log.Errorf("Update finetuneJob status failed: %v", err)
 			return err
 		}
 		scoringName := fmt.Sprintf("%s-scoring", finetuneJob.Name)
-		if finetuneJob.Spec.ScoringConfig == nil {
-			scoring := generate.GenerateBuiltInScoring(scoringName, finetuneJob.Namespace, finetuneJob.Status.Result.Serve)
+		if finetuneJob.Spec.ScoringConfig.Name == "" {
+			scoring := generate.GenerateBuiltInScoring(scoringName, finetuneJob.Namespace, infrencePath)
 			if err := ctrl.SetControllerReference(finetuneJob, scoring, r.Scheme); err != nil {
 				r.Log.Errorf("Set owner failed: %v", err)
 				return err
@@ -427,7 +411,7 @@ func (r *FinetuneJobReconciler) reconcileByRayServiceStatus(ctx context.Context,
 			}
 			return nil
 		}
-		scoring := generate.GeneratePluginScoring(scoringName, finetuneJob.Namespace, finetuneJob.Spec.ScoringConfig.Name, finetuneJob.Spec.ScoringConfig.Parameters, finetuneJob.Status.Result.Serve)
+		scoring := generate.GeneratePluginScoring(scoringName, finetuneJob.Namespace, finetuneJob.Spec.ScoringConfig.Name, finetuneJob.Spec.ScoringConfig.Parameters, infrencePath)
 		if err := ctrl.SetControllerReference(finetuneJob, scoring, r.Scheme); err != nil {
 			r.Log.Errorf("Set owner failed: %v", err)
 			return err
@@ -437,6 +421,51 @@ func (r *FinetuneJobReconciler) reconcileByRayServiceStatus(ctx context.Context,
 				r.Log.Errorf("Create scoring %s/%s failed: %v", scoringName, finetuneJob.Namespace, err)
 				return err
 			}
+		}
+	}
+	return nil
+}
+
+func (r *FinetuneJobReconciler) reconcileByScoringStatus(ctx context.Context, finetuneJob *finetunev1beta1.FinetuneJob) error {
+
+	scoringName := fmt.Sprintf("%s-scoring", finetuneJob.Name)
+	scoring := &extensionv1beta1.Scoring{}
+	if err := r.Get(ctx, types.NamespacedName{
+		Name:      scoringName,
+		Namespace: finetuneJob.Namespace,
+	}, scoring); err != nil {
+		if errors.IsNotFound(err) {
+			r.Log.Infof("Scoring %s/%s not found, err: %v", scoringName, finetuneJob.Namespace, err)
+			return valueobject.ErrRecalibrate
+		}
+		r.Log.Errorf("Get scoring %s/%s failed: %v", scoringName, finetuneJob.Namespace, err)
+		return err
+	}
+
+	// todo(tigerK) get scoring result, update finetuneJob status
+	if scoring.Status.Score != nil {
+		finetuneJob.Status.State = finetunev1beta1.FinetuneJobSuccessful
+		finetuneJob.Status.Result.Score = *scoring.Status.Score
+		finetuneJob.Status.Stats = metav1.Now().Format("2006-01-02 15:04:05")
+		if err := r.Client.Status().Update(ctx, finetuneJob); err != nil {
+			r.Log.Errorf("Update finetuneJob status failed: %v", err)
+			return err
+		}
+		rayServiceName := fmt.Sprintf("%s", finetuneJob.Name)
+		rayService := &rayv1.RayService{}
+		if err := r.Get(ctx, types.NamespacedName{
+			Name:      rayServiceName,
+			Namespace: finetuneJob.Namespace,
+		}, rayService); err != nil {
+			if errors.IsNotFound(err) {
+				return nil
+			}
+			r.Log.Errorf("Get rayService %s/%s failed: %v", finetuneJob.Namespace, rayServiceName, err)
+			return err
+		}
+		if err := r.Delete(ctx, rayService); err != nil {
+			r.Log.Errorf("Delete rayService %s/%s failed: %v", finetuneJob.Namespace, rayServiceName, err)
+			return err
 		}
 	}
 	return nil
