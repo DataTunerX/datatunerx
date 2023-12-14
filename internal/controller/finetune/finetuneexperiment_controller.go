@@ -18,7 +18,6 @@ package finetune
 
 import (
 	"context"
-	"fmt"
 	"reflect"
 	"sort"
 	"time"
@@ -87,10 +86,6 @@ func (r *FinetuneExperimentReconciler) Reconcile(ctx context.Context, req ctrl.R
 	if finetuneExperiment.Spec.Pending && finetuneExperiment.Status.State != finetunev1beta1.FinetuneExperimentPending {
 		for i := range finetuneExperiment.Spec.FinetuneJobs {
 			finetuneJob := finetuneExperiment.Spec.FinetuneJobs[i]
-			if finetuneJob.Name == "" {
-				finetuneJob.Name = fmt.Sprintf("%s-%s-%d", finetuneExperiment.Name, "finetunejob", i+1)
-				finetuneExperiment.Spec.FinetuneJobs[i].Name = fmt.Sprintf("%s-%s-%d", finetuneExperiment.Name, "finetunejob", i+1)
-			}
 			existFinetuneJob := &finetunev1beta1.FinetuneJob{}
 			if err := r.Client.Get(ctx, types.NamespacedName{
 				Name:      finetuneJob.Name,
@@ -125,10 +120,6 @@ func (r *FinetuneExperimentReconciler) Reconcile(ctx context.Context, req ctrl.R
 	}
 	for i := range finetuneExperiment.Spec.FinetuneJobs {
 		finetuneJob := finetuneExperiment.Spec.FinetuneJobs[i]
-		if finetuneJob.Name == "" {
-			finetuneJob.Name = fmt.Sprintf("%s-%s-%d", finetuneExperiment.Name, "finetunejob", i+1)
-			finetuneExperiment.Spec.FinetuneJobs[i].Name = fmt.Sprintf("%s-%s-%d", finetuneExperiment.Name, "finetunejob", i+1)
-		}
 		existFinetuneJob := &finetunev1beta1.FinetuneJob{}
 		if err := r.Client.Get(ctx, types.NamespacedName{
 			Name:      finetuneJob.Name,
@@ -138,9 +129,6 @@ func (r *FinetuneExperimentReconciler) Reconcile(ctx context.Context, req ctrl.R
 				finetuneJobInstance := &finetunev1beta1.FinetuneJob{}
 				finetuneJobInstance.Spec = finetuneJob.Spec
 				finetuneJobInstance.Name = finetuneJob.Name
-				if finetuneJob.Spec.ScoringConfig == nil || finetuneJob.Spec.ScoringConfig.Name == "" {
-					finetuneJobInstance.Spec.ScoringConfig = &finetuneExperiment.Spec.ScoringConfig
-				}
 				r.Log.Infof("finetuneJob Name: %s", finetuneJobInstance.Name)
 				finetuneJobInstance.Namespace = finetuneExperiment.Namespace
 				if err := ctrl.SetControllerReference(finetuneExperiment, finetuneJobInstance, r.Scheme); err != nil {
@@ -163,9 +151,6 @@ func (r *FinetuneExperimentReconciler) Reconcile(ctx context.Context, req ctrl.R
 
 	success := true
 	for i := range finetuneExperiment.Spec.FinetuneJobs {
-		if finetuneExperiment.Spec.FinetuneJobs[i].Name == "" {
-			finetuneExperiment.Spec.FinetuneJobs[i].Name = fmt.Sprintf("%s-%s-%d", finetuneExperiment.Name, "finetunejob", i+1)
-		}
 		finetuneJobInstance := &finetunev1beta1.FinetuneJob{}
 		if err := r.Client.Get(ctx, types.NamespacedName{Name: finetuneExperiment.Spec.FinetuneJobs[i].Name, Namespace: finetuneExperiment.Namespace}, finetuneJobInstance); err != nil {
 			r.Log.Errorf("Get finetuneJob %s/%s failed, err: %v", finetuneExperiment.Spec.FinetuneJobs[i].Name, finetuneExperiment.Namespace, err)

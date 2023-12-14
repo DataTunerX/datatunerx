@@ -119,6 +119,7 @@ func NewControllerManager() (manager.Manager, error) {
 			logging.ZLogger.Errorf("Unable to create webhook, %v", err)
 			os.Exit(1)
 		}
+		logging.ZLogger.Info("Set logger for webhook")
 	}()
 
 	if err = (&finetune.FinetuneExperimentReconciler{

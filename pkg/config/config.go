@@ -20,6 +20,8 @@ func init() {
 	config.BindEnv("password", "PASSWORD")
 	config.BindEnv("mountPath", "MOUNT_PATH")
 	config.BindEnv("baseImage", "BASE_IMAGE")
+	config.BindEnv("llmUrl", "LLM_URL")
+	config.SetDefault("llmUrl", "/tmp/llama2-7b/")
 }
 
 func GetS3Endpoint() string {
@@ -68,4 +70,8 @@ func GetRepositoryName() string {
 
 func GetMountPath() string {
 	return config.GetString("mountPath")
+}
+
+func GetLLMUrl() string {
+	return config.GetString("llmUrl")
 }

@@ -17,7 +17,6 @@ import (
 )
 
 const (
-	defaultFinetuneImage = "rayproject/ray271-llama2-7b-finetune:20231206"
 	// todo llm file path
 	defaultFinetuneCodePath = "/tmp/llama2-7b/"
 
@@ -27,13 +26,6 @@ const (
 
 func GenerateFinetune(finetuneJob *finetunev1beta1.FinetuneJob) *finetunev1beta1.Finetune {
 	finetuneLabel := label.GenerateInstanceLabel(finetuneJob.Name)
-
-	if finetuneJob.Spec.FineTune.Name == "" {
-		finetuneJob.Spec.FineTune.Name = fmt.Sprintf("%s-%s", finetuneJob.Name, "finetune")
-	}
-	if finetuneJob.Spec.FineTune.FinetuneSpec.Node <= 0 {
-		finetuneJob.Spec.FineTune.FinetuneSpec.Node = 1
-	}
 	finetune := &finetunev1beta1.Finetune{
 		ObjectMeta: metav1.ObjectMeta{
 			Name:      finetuneJob.Spec.FineTune.Name,
@@ -52,7 +44,7 @@ func GenerateFinetune(finetuneJob *finetunev1beta1.FinetuneJob) *finetunev1beta1
 		finetune.Spec.Resource = finetuneJob.Spec.FineTune.FinetuneSpec.Resource
 	}
 	if finetuneJob.Spec.FineTune.FinetuneSpec.Image.Name == "" {
-		finetune.Spec.Image.Name = defaultFinetuneImage
+		finetune.Spec.Image.Name = config.GetBaseImage()
 	}
 	if finetuneJob.Spec.FineTune.FinetuneSpec.Image.Path == "" {
 		finetune.Spec.Image.Path = defaultFinetuneCodePath

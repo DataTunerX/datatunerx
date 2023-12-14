@@ -385,11 +385,14 @@ func (r *FinetuneJobReconciler) reconcileByRayServiceStatus(ctx context.Context,
 		return err
 	}
 	if finetuneJob.Status.State == finetunev1beta1.FinetuneJobServe && rayService.Status.ServiceStatus == rayv1.Running {
-		if rayService.Status.ActiveServiceStatus.RayClusterStatus.Endpoints != nil {
-			serveNodePort := rayService.Status.ActiveServiceStatus.RayClusterStatus.Endpoints["serve"]
-			dashboardNodePort := rayService.Status.ActiveServiceStatus.RayClusterStatus.Endpoints["dashboard"]
-			finetuneJob.Status.Result.Serve = fmt.Sprintf("%s.%s.svc:%s", finetuneJob.Name, finetuneJob.Namespace, serveNodePort)
-			finetuneJob.Status.Result.Dashboard = fmt.Sprintf("%s.%s.svc:%s", finetuneJob.Name, finetuneJob.Namespace, dashboardNodePort)
+		if rayService.Status.ActiveServiceStatus.Applications["default"].Deployments["LlamaDeployment"].Status == "HEALTHY" {
+			// todo(tigerK) no time for optimisation
+			//serveNodePort := rayService.Status.ActiveServiceStatus.RayClusterStatus.Endpoints["serve"]
+			//dashboardNodePort := rayService.Status.ActiveServiceStatus.RayClusterStatus.Endpoints["dashboard"]
+			finetuneJob.Status.Result.Serve = fmt.Sprintf("%s.%s.svc:%s", finetuneJob.Name, finetuneJob.Namespace, "8000")
+			finetuneJob.Status.Result.Dashboard = fmt.Sprintf("%s.%s.svc:%s", finetuneJob.Name, finetuneJob.Namespace, "8080")
+		} else {
+			return valueobject.ErrRecalibrate
 		}
 		infrencePath := fmt.Sprintf("http://%s/inference", finetuneJob.Status.Result.Serve)
 		if err := r.Client.Status().Update(ctx, finetuneJob); err != nil {
