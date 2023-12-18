@@ -214,11 +214,6 @@ func (r *FinetuneExperimentReconciler) Reconcile(ctx context.Context, req ctrl.R
 		r.Log.Errorf("Update fineExperiment %s/%s status failed", finetuneExperiment.Namespace, finetuneExperiment.Name)
 		return handlererr.HandlerErr(err)
 	}
-	if err := r.Client.Update(ctx, finetuneExperiment); err != nil {
-		r.Log.Errorf("Update fineExperiment %s/%s failed", finetuneExperiment.Namespace, finetuneExperiment.Name)
-		return handlererr.HandlerErr(err)
-	}
-
 	return handlererr.HandlerErr(nil)
 }
 

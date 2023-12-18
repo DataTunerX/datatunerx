@@ -394,13 +394,13 @@ func (r *FinetuneJobReconciler) reconcileByRayServiceStatus(ctx context.Context,
 		} else {
 			return valueobject.ErrRecalibrate
 		}
-		infrencePath := fmt.Sprintf("http://%s/inference", finetuneJob.Status.Result.Serve)
+		infrencePath := fmt.Sprintf("http://%s/chat/completions", finetuneJob.Status.Result.Serve)
 		if err := r.Client.Status().Update(ctx, finetuneJob); err != nil {
 			r.Log.Errorf("Update finetuneJob status failed: %v", err)
 			return err
 		}
 		scoringName := fmt.Sprintf("%s-scoring", finetuneJob.Name)
-		if finetuneJob.Spec.ScoringConfig.Name == "" {
+		if finetuneJob.Spec.ScoringPluginConfig.Name == "" {
 			scoring := generate.GenerateBuiltInScoring(scoringName, finetuneJob.Namespace, infrencePath)
 			if err := ctrl.SetControllerReference(finetuneJob, scoring, r.Scheme); err != nil {
 				r.Log.Errorf("Set owner failed: %v", err)
@@ -414,7 +414,7 @@ func (r *FinetuneJobReconciler) reconcileByRayServiceStatus(ctx context.Context,
 			}
 			return nil
 		}
-		scoring := generate.GeneratePluginScoring(scoringName, finetuneJob.Namespace, finetuneJob.Spec.ScoringConfig.Name, finetuneJob.Spec.ScoringConfig.Parameters, infrencePath)
+		scoring := generate.GeneratePluginScoring(scoringName, finetuneJob.Namespace, finetuneJob.Spec.ScoringPluginConfig.Name, finetuneJob.Spec.ScoringPluginConfig.Parameters, infrencePath)
 		if err := ctrl.SetControllerReference(finetuneJob, scoring, r.Scheme); err != nil {
 			r.Log.Errorf("Set owner failed: %v", err)
 			return err

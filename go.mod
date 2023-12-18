@@ -3,11 +3,10 @@ module github.com/DataTunerX/finetune-experiment-controller
 go 1.20
 
 require (
-	github.com/DataTunerX/meta-server v0.0.0-20231208090647-6ffa9bdf2b96
+	github.com/DataTunerX/meta-server v0.0.0-20231218095422-0a5ce7b2a463
 	github.com/DataTunerX/utility-server v0.0.0-20231208092112-6224f8619737
 	github.com/go-logr/zapr v1.2.4
 	github.com/open-policy-agent/cert-controller v0.10.0
-	github.com/operator-framework/operator-lib v0.11.0
 	github.com/ray-project/kuberay/ray-operator v1.0.0
 	github.com/spf13/pflag v1.0.5
 	github.com/spf13/viper v1.17.0

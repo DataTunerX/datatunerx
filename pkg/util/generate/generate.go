@@ -335,12 +335,6 @@ func GenerateBuiltInScoring(name, namespace, inference string) *extensionv1beta1
 			Namespace: namespace,
 		},
 		Spec: extensionv1beta1.ScoringSpec{
-			Questions: []extensionv1beta1.Question{
-				{
-					Question:  "aaaa",
-					Reference: "hhhh",
-				},
-			},
 			InferenceService: inference,
 		},
 	}
