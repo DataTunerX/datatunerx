@@ -31,6 +31,7 @@ import (
 	extensionv1beta1 "github.com/DataTunerX/meta-server/api/extension/v1beta1"
 	finetunev1beta1 "github.com/DataTunerX/meta-server/api/finetune/v1beta1"
 	"github.com/DataTunerX/utility-server/logging"
+	"github.com/duke-git/lancet/v2/slice"
 	rayv1 "github.com/ray-project/kuberay/ray-operator/apis/ray/v1"
 	batchv1 "k8s.io/api/batch/v1"
 	"k8s.io/apimachinery/pkg/api/errors"
@@ -82,7 +83,10 @@ func (r *FinetuneJobReconciler) Reconcile(ctx context.Context, req ctrl.Request)
 	if finetuneJob.GetDeletionTimestamp() != nil {
 		r.Log.Infof("Delete finetuneJob: %s/%s", finetuneJob.Namespace, finetuneJob.Name)
 		if controllerutil.ContainsFinalizer(finetuneJob, finetunev1beta1.FinetuneGroupFinalizer) {
-			// todo cleaner
+			if err := r.reconcileCleaner(ctx, finetuneJob); err != nil {
+				r.Log.Errorf("cleaner failed: %s/%s, Err: %v", finetuneJob.Namespace, finetuneJob.Name, err)
+				return handlererr.HandlerErr(err)
+			}
 			controllerutil.RemoveFinalizer(finetuneJob, finetunev1beta1.FinetuneGroupFinalizer)
 			if err := r.Update(ctx, finetuneJob); err != nil {
 				r.Log.Errorf("Remove finalizer failed: %s/%s, Err: %v", finetuneJob.Namespace, finetuneJob.Name, err)
@@ -215,6 +219,38 @@ func (r *FinetuneJobReconciler) reconcilePreCondition(ctx context.Context, finet
 		if err := r.Get(ctx, types.NamespacedName{Name: name, Namespace: finetuneJob.Namespace}, obj); err != nil {
 			r.Log.Errorf("Get %s: %s/%s failed, err: %v", obj.GetObjectKind(), finetuneJob.Namespace, name, err)
 			return err
+		}
+		switch obj.(type) {
+		case *corev1beta1.LLM:
+			llm := obj.(*corev1beta1.LLM)
+			if llm.Status.ReferenceFinetuneName == nil {
+				llm.Status.ReferenceFinetuneName = make([]string, 0)
+			}
+			llm.Status.ReferenceFinetuneName = slice.AppendIfAbsent(llm.Status.ReferenceFinetuneName, finetuneJob.Spec.FineTune.Name)
+			if err := r.Client.Status().Update(ctx, llm); err != nil {
+				r.Log.Errorf("update %s: %s/%s status failed, err: %v", obj.GetObjectKind(), finetuneJob.Namespace, name, err)
+				return err
+			}
+		case *extensionv1beta1.Dataset:
+			dataset := obj.(*extensionv1beta1.Dataset)
+			if dataset.Status.ReferenceFinetuneName == nil {
+				dataset.Status.ReferenceFinetuneName = make([]string, 0)
+			}
+			dataset.Status.ReferenceFinetuneName = slice.AppendIfAbsent(dataset.Status.ReferenceFinetuneName, finetuneJob.Spec.FineTune.Name)
+			if err := r.Client.Status().Update(ctx, dataset); err != nil {
+				r.Log.Errorf("update %s: %s/%s status failed, err: %v", obj.GetObjectKind(), finetuneJob.Namespace, name, err)
+				return err
+			}
+		case *corev1beta1.Hyperparameter:
+			hyperparameter := obj.(*corev1beta1.Hyperparameter)
+			if hyperparameter.Status.ReferenceFinetuneName == nil {
+				hyperparameter.Status.ReferenceFinetuneName = make([]string, 0)
+			}
+			hyperparameter.Status.ReferenceFinetuneName = slice.AppendIfAbsent(hyperparameter.Status.ReferenceFinetuneName, finetuneJob.Spec.FineTune.Name)
+			if err := r.Client.Status().Update(ctx, hyperparameter); err != nil {
+				r.Log.Errorf("update %s: %s/%s status failed, err: %v", obj.GetObjectKind(), finetuneJob.Namespace, name, err)
+				return err
+			}
 		}
 	}
 	return nil
@@ -400,7 +436,7 @@ func (r *FinetuneJobReconciler) reconcileByRayServiceStatus(ctx context.Context,
 			return err
 		}
 		scoringName := fmt.Sprintf("%s-scoring", finetuneJob.Name)
-		if finetuneJob.Spec.ScoringPluginConfig.Name == "" {
+		if finetuneJob.Spec.ScoringPluginConfig == nil {
 			scoring := generate.GenerateBuiltInScoring(scoringName, finetuneJob.Namespace, infrencePath)
 			if err := ctrl.SetControllerReference(finetuneJob, scoring, r.Scheme); err != nil {
 				r.Log.Errorf("Set owner failed: %v", err)
@@ -469,6 +505,55 @@ func (r *FinetuneJobReconciler) reconcileByScoringStatus(ctx context.Context, fi
 		if err := r.Delete(ctx, rayService); err != nil {
 			r.Log.Errorf("Delete rayService %s/%s failed: %v", finetuneJob.Namespace, rayServiceName, err)
 			return err
+		}
+	}
+	return nil
+}
+
+func (r *FinetuneJobReconciler) reconcileCleaner(ctx context.Context, finetuneJob *finetunev1beta1.FinetuneJob) error {
+	preCondition := make(map[string]client.Object, 3)
+	preCondition[finetuneJob.Spec.FineTune.FinetuneSpec.LLM] = &corev1beta1.LLM{}
+	preCondition[finetuneJob.Spec.FineTune.FinetuneSpec.Hyperparameter.HyperparameterRef] = &corev1beta1.Hyperparameter{}
+	preCondition[finetuneJob.Spec.FineTune.FinetuneSpec.Dataset] = &extensionv1beta1.Dataset{}
+	for name, obj := range preCondition {
+		if err := r.Get(ctx, types.NamespacedName{Name: name, Namespace: finetuneJob.Namespace}, obj); err != nil {
+			r.Log.Errorf("Get %s: %s/%s failed, err: %v", obj.GetObjectKind(), finetuneJob.Namespace, name, err)
+			return err
+		}
+		switch obj.(type) {
+		case *corev1beta1.LLM:
+			llm := obj.(*corev1beta1.LLM)
+			if llm.Status.ReferenceFinetuneName == nil {
+				continue
+			}
+			result := slice.IndexOf(llm.Status.ReferenceFinetuneName, finetuneJob.Spec.FineTune.Name)
+			llm.Status.ReferenceFinetuneName = slice.DeleteAt(llm.Status.ReferenceFinetuneName, result)
+			if err := r.Client.Status().Update(ctx, llm); err != nil {
+				r.Log.Errorf("update %s: %s/%s status failed, err: %v", obj.GetObjectKind(), finetuneJob.Namespace, name, err)
+				return err
+			}
+		case *extensionv1beta1.Dataset:
+			dataset := obj.(*extensionv1beta1.Dataset)
+			if dataset.Status.ReferenceFinetuneName == nil {
+				continue
+			}
+			result := slice.IndexOf(dataset.Status.ReferenceFinetuneName, finetuneJob.Spec.FineTune.Name)
+			dataset.Status.ReferenceFinetuneName = slice.DeleteAt(dataset.Status.ReferenceFinetuneName, result)
+			if err := r.Client.Status().Update(ctx, dataset); err != nil {
+				r.Log.Errorf("update %s: %s/%s status failed, err: %v", obj.GetObjectKind(), finetuneJob.Namespace, name, err)
+				return err
+			}
+		case *corev1beta1.Hyperparameter:
+			hyperparameter := obj.(*corev1beta1.Hyperparameter)
+			if hyperparameter.Status.ReferenceFinetuneName == nil {
+				continue
+			}
+			result := slice.IndexOf(hyperparameter.Status.ReferenceFinetuneName, finetuneJob.Spec.FineTune.Name)
+			hyperparameter.Status.ReferenceFinetuneName = slice.DeleteAt(hyperparameter.Status.ReferenceFinetuneName, result)
+			if err := r.Client.Status().Update(ctx, hyperparameter); err != nil {
+				r.Log.Errorf("update %s: %s/%s status failed, err: %v", obj.GetObjectKind(), finetuneJob.Namespace, name, err)
+				return err
+			}
 		}
 	}
 	return nil
