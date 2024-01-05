@@ -109,6 +109,8 @@ func (r *FinetuneExperimentReconciler) Reconcile(ctx context.Context, req ctrl.R
 			return handlererr.HandlerErr(err)
 		}
 		return handlererr.HandlerErr(nil)
+	} else if finetuneExperiment.Spec.Pending {
+		return handlererr.HandlerErr(nil)
 	}
 
 	if finetuneExperiment.Status.State == "" {

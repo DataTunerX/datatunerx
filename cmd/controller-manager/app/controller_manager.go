@@ -29,11 +29,11 @@ import (
 )
 
 const (
-	LockName       = "finetune-experiment-controller-lock"
-	SecretName     = "finetune-experiment-controller-cert"
-	CaName         = "finetune-experiment-controller-ca"
-	CaOrganization = "finetune-experiment-controller"
-	ServiceName    = "finetune-experiment-controller-service"
+	LockName       = "datatunerx-lock"
+	SecretName     = "datatunerx-cert"
+	CaName         = "datatunerx-ca"
+	CaOrganization = "datatunerx"
+	ServiceName    = "finetune-experiment"
 )
 
 var (
