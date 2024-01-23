@@ -18,6 +18,7 @@ import (
 	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/apimachinery/pkg/types"
 	utilruntime "k8s.io/apimachinery/pkg/util/runtime"
+	"k8s.io/client-go/kubernetes"
 	clientgoscheme "k8s.io/client-go/kubernetes/scheme"
 	_ "k8s.io/client-go/plugin/pkg/client/auth"
 	ctrl "sigs.k8s.io/controller-runtime"
@@ -147,6 +148,16 @@ func NewControllerManager() (manager.Manager, error) {
 		Log:    logging.ZLogger,
 	}).SetupWithManager(mgr); err != nil {
 		logging.ZLogger.Errorf("Unable to create FinetuneJob controller, %v", err)
+		return nil, err
+	}
+	if err = (&finetune.FinetuneReconciler{
+		Log:       logging.ZLogger,
+		Client:    mgr.GetClient(),
+		Scheme:    mgr.GetScheme(),
+		Clientset: kubernetes.NewForConfigOrDie(ctrl.GetConfigOrDie()),
+		Config:    ctrl.GetConfigOrDie(),
+	}).SetupWithManager(mgr); err != nil {
+		logging.ZLogger.Errorf("Unable to create Finetune controller, %v", err)
 		return nil, err
 	}
 	//+kubebuilder:scaffold:builder
