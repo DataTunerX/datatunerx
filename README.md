@@ -1,82 +1,69 @@
-# finetune-experiment-controller
-// TODO(user): Add simple overview of use/purpose
+<p align="center">
+<picture>
+  <source media="(prefers-color-scheme: dark)" srcset="https://github.com/DataTunerX/datatunerx-controller/assets/logo/Logo_DataTunerX - Horizontal - Color Dark.png">
+  <source media="(prefers-color-scheme: light)" srcset="https://github.com/DataTunerX/datatunerx-controller/assets/logo/Logo_DataTunerX - Horizontal - Color Light.png">
+  <img alt="DTX Logo" src="https://github.com/DataTunerX/datatunerx-controller/assets/logo/Logo_DataTunerX - Horizontal - Color Dark.png">
+</picture>
+</p>
 
-## Description
-// TODO(user): An in-depth paragraph about your project and overview of use
+**Description**:  
+DataTunerX short for DTX is a powerful tool.
 
-## Getting Started
-You’ll need a Kubernetes cluster to run against. You can use [KIND](https://sigs.k8s.io/kind) to get a local cluster for testing, or run against a remote cluster.
-**Note:** Your controller will automatically use the current context in your kubeconfig file (i.e. whatever cluster `kubectl cluster-info` shows).
+**Technology stack**:  
+Built using Go.
 
-### Running on the cluster
-1. Install Instances of Custom Resources:
+**Status**:  
+Alpha (v0.1.0) - Early development phase. [CHANGELOG](CHANGELOG.md) for details on recent updates.
 
-```sh
-kubectl apply -f config/samples/
-```
+**Links to production or demo instances**:  
+[Demo Instance](https://github.com/DataTunerX/datatunerx-controller) (COMING SOON)
+[Documentation](https://github.com/DataTunerX/datatunerx-controller) (COMING SOON)
 
-2. Build and push your image to the location specified by `IMG`:
+**Screenshot**:  
+![DTX Screenshot](https://github.com/DataTunerX/datatunerx-controller/assets/screenshot/Job_Details.png)
 
-```sh
-make docker-build docker-push IMG=<some-registry>/finetune-experiment-controller:tag
-```
+## Dependencies
 
-3. Deploy the controller to the cluster with the image specified by `IMG`:
+Describe any dependencies that must be installed for this software to work. This includes programming languages, databases, build tools, etc. Specify versions if necessary.
 
-```sh
-make deploy IMG=<some-registry>/finetune-experiment-controller:tag
-```
+## Installation
 
-### Uninstall CRDs
-To delete the CRDs from the cluster:
+Detailed instructions on how to install, configure, and run the project are available in the [INSTALL](INSTALL.md) document.
 
-```sh
-make uninstall
-```
+## Configuration
 
-### Undeploy controller
-UnDeploy the controller from the cluster:
+If the software is configurable, describe the configuration options in detail, either here or in other linked documentation. (COMING SOON)
 
-```sh
-make undeploy
-```
+## Usage
 
-## Contributing
-// TODO(user): Add detailed information on how you would like others to contribute to this project
+Provide clear instructions on how to use the software, including code snippets where appropriate. (COMING SOON)
 
-### How it works
-This project aims to follow the Kubernetes [Operator pattern](https://kubernetes.io/docs/concepts/extend-kubernetes/operator/).
+## Known issues
 
-It uses [Controllers](https://kubernetes.io/docs/concepts/architecture/controller/),
-which provide a reconcile function responsible for synchronizing resources until the desired state is reached on the cluster.
+Document any known significant shortcomings with the software.
 
-### Test It Out
-1. Install the CRDs into the cluster:
+## Getting help
 
-```sh
-make install
-```
+If you have questions, concerns, or bug reports, please file an issue in this repository's [Issue Tracker](https://github.com/DataTunerX/datatunerx-controller/issues).
 
-2. Run your controller (this will run in the foreground, so switch to a new terminal if you want to leave it running):
+## Getting involved
 
-```sh
-make run
-```
+We welcome contributions! Check out our [CONTRIBUTING](CONTRIBUTING.md) guidelines to get started. Share your feedback, report bugs, or contribute to ongoing discussions.
 
-**NOTE:** You can also run this in one step by running: `make install run`
+----
 
-### Modifying the API definitions
-If you are editing the API definitions, generate the manifests such as CRs or CRDs using:
+## Credits and References
 
-```sh
-make manifests
-```
+1. **Kubernetes (k8s):** 
+   - [Kubernetes](https://kubernetes.io/): An open-source container orchestration platform for automating the deployment, scaling, and management of containerized applications.
 
-**NOTE:** Run `make --help` for more information on all potential `make` targets
+2. **Ray:**
+   - [Ray Project](https://ray.io/): An open-source distributed computing framework that makes it easy to scale and parallelize applications.
 
-More information can be found via the [Kubebuilder Documentation](https://book.kubebuilder.io/introduction.html)
+3. **KubeRay:**
+   - [KubeRay](https://github.com/kuberay/kuberay): An integration of Ray with Kubernetes, enabling efficient distributed computing on Kubernetes clusters.
 
-## License
+4. **Operator SDK:**
+   - [Operator SDK](https://sdk.operatorframework.io/): A toolkit for building Kubernetes Operators, which are applications that automate the management of custom resources in a Kubernetes cluster.
 
-finetune-experiment-controller is under the Apache 2.0 license. See the [LICENSE](LICENSE) file for details.
-
+Feel free to explore these projects to deepen your understanding of the technologies and concepts that may have influenced or inspired this project.
