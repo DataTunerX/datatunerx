@@ -9,30 +9,21 @@
 
 ***DataTunerX (DTX)*** is designed as a cloud-native solution integrated with distributed computing frameworks. Leveraging scalable *GPU* resources, it's a platform built for efficient fine-tuning *LLMs* with a focus on practical utility. Its core strength lies in facilitating batch fine-tuning tasks, enabling users to conduct multiple tasks concurrently within a single ***experiment***. ***DTX*** encompasses essential capabilities such as ${\color{#D8CBBE}dataset \space management}$, ${\color{#BDE7BD}hyperparameter \space control}$, ${\color{#F1A7A7}fine-tuning \space workflows}$, ${\color{#BADBF4}model \space management}$, ${\color{#F4CEDB}model \space evaluation}$, ${\color{#D2E3EE}model \space comparison \space inference}$, and a ${\color{#F9E195}modular \space plugin \space system}$.
 
-**Technology stack**:  
-Built using *Go*.
 **Technology stack**: 
 
 ***DTX*** is built on cloud-native principles, employing a variety of [*Operators*](https://www.redhat.com/en/topics/containers/what-is-a-kubernetes-operator) that consist of distinct *Custom Resource Definitions (CRDs)* and *Controller* logic. Developed primarily in *Go*, the implementation utilizes the [*operator-sdk*](https://github.com/operator-framework/operator-sdk) toolkit. Operating within a [*Kubernetes (K8s)*](https://github.com/kubernetes/kubernetes) environment, ***DTX*** relies on the operator pattern for *CRD* development and management. Furthermore, ***DTX*** integrates with [*kuberay*](https://github.com/ray-project/kuberay) to harness distributed execution and inference capabilities.
 
 **Status**:  
-*Alpha (v0.1.0)* - Early development phase. [CHANGELOG](CHANGELOG.md) for details on recent updates.
 
 *Alpha (v0.1.0)* - Early development phase. [CHANGELOG](CHANGELOG.md) for details on recent updates.
 
-**Links to production or demo instances**:  
-
-[Demo Instance](https://github.com/DataTunerX/datatunerx-controller) (COMING SOON)
-
-[Documentation](https://github.com/DataTunerX/datatunerx-controller) (COMING SOON)
 **Quick Demo & More Documentation**:  
 
 - [Demo](https://github.com/DataTunerX/datatunerx-controller) (COMING SOON)
 
 - [Documentation](https://github.com/DataTunerX/datatunerx-controller) (COMING SOON)
 
-**Screenshot**:  
-![**DTX Screenshot**](https://raw.githubusercontent.com/DataTunerX/datatunerx-controller/main/assets/screenshot/Job_Details.png)
+**Screenshot**:
 
 ![**DTX Screenshot**](https://raw.githubusercontent.com/DataTunerX/datatunerx-controller/main/assets/screenshot/Job_Details.png)
 
@@ -84,25 +75,19 @@ Detailed instructions on how to install, configure, and run the project are avai
 Provide clear instructions on how to use the software, including code snippets where appropriate. (COMING SOON)
 
 # Known issues 🚨
-# Known issues 🚨
 
 Document any known significant shortcomings with the software.
 
 # Getting help ❓
-# Getting help ❓
 
-If you have questions, concerns, or bug reports, please file an issue in this repository's [*Issue Tracker*](https://github.com/DataTunerX/datatunerx-controller/issues).
 If you have questions, concerns, or bug reports, please file an issue in this repository's [*Issue Tracker*](https://github.com/DataTunerX/datatunerx-controller/issues).
 
 # Getting involved 🤝
-# Getting involved 🤝
 
-We welcome contributions! Check out our [*CONTRIBUTING*](CONTRIBUTING.md) guidelines to get started. Share your feedback, report bugs, or contribute to ongoing discussions.
 We welcome contributions! Check out our [*CONTRIBUTING*](CONTRIBUTING.md) guidelines to get started. Share your feedback, report bugs, or contribute to ongoing discussions.
 
 ----
 
-# Credits and References 🙌
 # Credits and References 🙌
 
 1. **Kubernetes (k8s):** 
