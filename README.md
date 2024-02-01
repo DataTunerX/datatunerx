@@ -1,8 +1,8 @@
 <p align="center">
 <picture>
-  <source media="(prefers-color-scheme: dark)" srcset="https://github.com/DataTunerX/datatunerx-controller/assets/logo/Logo_DataTunerX - Horizontal - Color Dark.png">
-  <source media="(prefers-color-scheme: light)" srcset="https://github.com/DataTunerX/datatunerx-controller/assets/logo/Logo_DataTunerX - Horizontal - Color Light.png">
-  <img alt="DTX Logo" src="https://github.com/DataTunerX/datatunerx-controller/assets/logo/Logo_DataTunerX - Horizontal - Color Dark.png">
+  <source media="(prefers-color-scheme: dark)" srcset="https://raw.githubusercontent.com/DataTunerX/datatunerx-controller/assets/logo/Logo_DataTunerX - Horizontal - Color Dark.png">
+  <source media="(prefers-color-scheme: light)" srcset="https://raw.githubusercontent.com/DataTunerX/datatunerx-controller/assets/logo/Logo_DataTunerX - Horizontal - Color Light.png">
+  <img alt="DTX Logo" src="https://raw.githubusercontent.com/DataTunerX/datatunerx-controller/assets/logo/Logo_DataTunerX - Horizontal - Color Dark.png">
 </picture>
 </p>
 
@@ -20,7 +20,7 @@ Alpha (v0.1.0) - Early development phase. [CHANGELOG](CHANGELOG.md) for details 
 [Documentation](https://github.com/DataTunerX/datatunerx-controller) (COMING SOON)
 
 **Screenshot**:  
-![DTX Screenshot](https://github.com/DataTunerX/datatunerx-controller/assets/screenshot/Job_Details.png)
+![DTX Screenshot](https://raw.githubusercontent.com/DataTunerX/datatunerx-controller/assets/screenshot/Job_Details.png)
 
 ## Dependencies
 
