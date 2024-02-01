@@ -1,6 +1,10 @@
 ![**DTX Logo**](https://raw.githubusercontent.com/DataTunerX/datatunerx-controller/main/assets/logo/Logo_DataTunerX%20-%20Horizontal%20-%20Color%20Light.png#gh-dark-mode-only)
 ![**DTX Logo**](https://raw.githubusercontent.com/DataTunerX/datatunerx-controller/main/assets/logo/Logo_DataTunerX%20-%20Horizontal%20-%20Color%20Dark.png#gh-light-mode-only)
 
+![Kubernetes](https://img.shields.io/badge/kubernetes-%23326ce5.svg?style=flat&logo=kubernetes&logoColor=white)
+![release](https://img.shields.io/badge/version-0.1.0-blue)
+![owner](https://img.shields.io/badge/daocloud.io-green)
+![fine-tuning](https://img.shields.io/badge/fine--tuning-8B3E3)
 # Welcome 👋
 
 **Description**:  
