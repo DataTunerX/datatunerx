@@ -33,8 +33,6 @@
 
 ## 1. Dataset Management 🗄️
 Effortlessly manage datasets by supporting both *S3* protocol (*http* is coming) and local dataset uploads. Datasets are organized with splits such as test, validate, and training. Additionally, feature mapping enhances flexibility for fine-tuning jobs.
-![batch](https://raw.githubusercontent.com/DataTunerX/datatunerx-controller/main/assets/design/datasetplugin.png#gh-dark-mode-only)
-![batch](https://raw.githubusercontent.com/DataTunerX/datatunerx-controller/main/assets/design/datasetplugindark.png#gh-light-mode-only)
 
 ## 2. Fine-Tuning Experiments 🧪
 Conduct fine-tuning experiments by creating multiple fine-tuning jobs. Each job can employ different llms, datasets, and hyperparameters. Evaluate the fine-tuned models uniformly through the experiment's evaluation unit to identify the fine-tuning results.
