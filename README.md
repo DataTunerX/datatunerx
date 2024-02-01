@@ -1,10 +1,6 @@
-<p align="center">
-<picture>
-  <source media="(prefers-color-scheme: dark)" srcset="https://raw.githubusercontent.com/DataTunerX/datatunerx-controller/main/assets/logo/Logo_DataTunerX - Horizontal - Color Light.png">
-  <source media="(prefers-color-scheme: light)" srcset="https://raw.githubusercontent.com/DataTunerX/datatunerx-controller/main/assets/logo/Logo_DataTunerX - Horizontal - Color Dark.png">
-  <img alt="DTX Logo" src="https://raw.githubusercontent.com/DataTunerX/datatunerx-controller/main/assets/logo/Logo_DataTunerX - Horizontal - Color Dark.png">
-</picture>
-</p>
+
+![DTX Logo](https://raw.githubusercontent.com/DataTunerX/datatunerx-controller/main/assets/logo/Logo_DataTunerX%20-%20Horizontal%20-%20Color%20Light.png#gh-dark-mode-only)
+![DTX Logo](https://raw.githubusercontent.com/DataTunerX/datatunerx-controller/main/assets/logo/Logo_DataTunerX%20-%20Horizontal%20-%20Color%20Dark.png#gh-light-mode-only)
 
 **Description**:  
 DataTunerX short for DTX is a powerful tool.
