@@ -33,6 +33,8 @@
 
 ## 1. Dataset Management 🗄️
 Effortlessly manage datasets by supporting both *S3* protocol (*http* is coming) and local dataset uploads. Datasets are organized with splits such as test, validate, and training. Additionally, feature mapping enhances flexibility for fine-tuning jobs.
+![batch](https://raw.githubusercontent.com/DataTunerX/datatunerx-controller/main/assets/design/datasetplugin.png#gh-dark-mode-only)
+![batch](https://raw.githubusercontent.com/DataTunerX/datatunerx-controller/main/assets/design/datasetplugindark.png#gh-light-mode-only)
 
 ## 2. Fine-Tuning Experiments 🧪
 Conduct fine-tuning experiments by creating multiple fine-tuning jobs. Each job can employ different llms, datasets, and hyperparameters. Evaluate the fine-tuned models uniformly through the experiment's evaluation unit to identify the fine-tuning results.
@@ -47,6 +49,8 @@ Gain detailed insights into each fine-tuning job within an experiment. Explore j
 
 ## 4. Model Repository 🗃️
 Store llms in the model repository, facilitating efficient management and deployment of inference services.
+![batch](https://raw.githubusercontent.com/DataTunerX/datatunerx-controller/main/assets/design/evalandinference.png#gh-dark-mode-only)
+![batch](https://raw.githubusercontent.com/DataTunerX/datatunerx-controller/main/assets/design/evaldark.png#gh-light-mode-only)
 
 ## 5. Hyperparameter Group Management 🧰
 Utilize a rich parameter configuration system with support for diverse parameters and template-based differentiation.
@@ -58,9 +62,26 @@ Deploy inference services for multiple models simultaneously, enabling straightf
 Leverage the plugin system for datasets and evaluation units, allowing users to integrate specialized datasets and evaluation methods tailored to their unique requirements.
 
 ## 8. More Coming 🤹‍♀️
-DTX offers a comprehensive suite of tools, ensuring a seamless fine-tuning experience with flexibility and powerful functionality. Explore each feature to tailor your fine-tuning tasks according to your specific needs.
+***DTX*** offers a comprehensive suite of tools, ensuring a seamless fine-tuning experience with flexibility and powerful functionality. Explore each feature to tailor your fine-tuning tasks according to your specific needs.
 
 # Why DTX? 🤔
+
+***DTX*** stands out as the preferred choice for fine-tuning large language models, offering distinct advantages that address critical challenges in natural language processing:
+
+## 1. Optimized Resource Utilization 🚀
+- **Efficient GPU Integration:** Seamlessly integrates with distributed computing frameworks, ensuring optimal utilization of scalable GPU resources, even in resource-constrained environments.
+
+## 2. Streamlined Batch Fine-Tuning 🔄
+- **Concurrent Task Execution:** Excels in batch fine-tuning, enabling concurrent execution of multiple tasks within a single experiment. This enhances workflow efficiency and overall productivity.
+![batch](https://raw.githubusercontent.com/DataTunerX/datatunerx-controller/main/assets/design/batch.png#gh-dark-mode-only)
+![batch](https://raw.githubusercontent.com/DataTunerX/datatunerx-controller/main/assets/design/batchdark.png#gh-light-mode-only)
+## 3. Robust Feature Set for Varied Needs 🧰
+- **Diverse Capabilities:** From dataset management to model management, ***DTX*** provides a comprehensive feature set catering to diverse fine-tuning requirements.
+
+## 4. Simplified Experimentation with Lower Entry Barriers 🧪
+- **User-Friendly Experimentation:** Empowers users to effortlessly conduct fine-tuning experiments with varying models, datasets, and hyperparameters. This lowers the entry barriers for users with varying skill levels.
+
+In summary, ***DTX*** strategically addresses challenges in resource optimization, data management, workflow efficiency, and accessibility, making it an ideal solution for efficient natural language processing tasks.
 
 # Architecture 🏛️
 
