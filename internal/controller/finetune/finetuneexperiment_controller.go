@@ -18,10 +18,11 @@ package finetune
 
 import (
 	"context"
-	"fmt"
 	"reflect"
+	"sort"
 	"time"
 
+	"github.com/DataTunerX/finetune-experiment-controller/pkg/util"
 	"github.com/DataTunerX/finetune-experiment-controller/pkg/util/handlererr"
 	finetunev1beta1 "github.com/DataTunerX/meta-server/api/finetune/v1beta1"
 	"github.com/DataTunerX/utility-server/logging"
@@ -37,7 +38,6 @@ import (
 	"sigs.k8s.io/controller-runtime/pkg/event"
 	"sigs.k8s.io/controller-runtime/pkg/handler"
 	"sigs.k8s.io/controller-runtime/pkg/predicate"
-	"sigs.k8s.io/controller-runtime/pkg/source"
 )
 
 // FinetuneExperimentReconciler reconciles a FinetuneExperiment object
@@ -83,7 +83,25 @@ func (r *FinetuneExperimentReconciler) Reconcile(ctx context.Context, req ctrl.R
 		}
 	}
 
-	if finetuneExperiment.Spec.Pending {
+	if finetuneExperiment.Spec.Pending && finetuneExperiment.Status.State != finetunev1beta1.FinetuneExperimentPending {
+		for i := range finetuneExperiment.Spec.FinetuneJobs {
+			finetuneJob := finetuneExperiment.Spec.FinetuneJobs[i]
+			existFinetuneJob := &finetunev1beta1.FinetuneJob{}
+			if err := r.Client.Get(ctx, types.NamespacedName{
+				Name:      finetuneJob.Name,
+				Namespace: finetuneExperiment.Namespace,
+			}, existFinetuneJob); err != nil {
+				if errors.IsNotFound(err) {
+					r.Log.Infof("FinetuneJob %s/%s not found, continue", finetuneExperiment.Namespace, finetuneJob.Name)
+					continue
+				}
+				return handlererr.HandlerErr(err)
+			}
+			if err := r.Client.Delete(ctx, existFinetuneJob); err != nil {
+				return handlererr.HandlerErr(err)
+			}
+		}
+		finetuneExperiment.Status.JobsStatus = make([]*finetunev1beta1.FinetuneJobStatusSetting, 0)
 		finetuneExperiment.Status.State = finetunev1beta1.FinetuneExperimentPending
 		finetuneExperiment.Status.Stats = metav1.Now().Format("2006-01-02 15:04:05")
 		if err := r.Client.Status().Update(ctx, finetuneExperiment); err != nil {
@@ -91,14 +109,19 @@ func (r *FinetuneExperimentReconciler) Reconcile(ctx context.Context, req ctrl.R
 			return handlererr.HandlerErr(err)
 		}
 		return handlererr.HandlerErr(nil)
+	} else if finetuneExperiment.Spec.Pending {
+		return handlererr.HandlerErr(nil)
 	}
 
+	if finetuneExperiment.Status.State == "" {
+		finetuneExperiment.Status.State = finetunev1beta1.FinetuneExperimentProcessing
+		if err := r.Client.Status().Update(ctx, finetuneExperiment); err != nil {
+			r.Log.Errorf("Update fineExperiment %s/%s status failed", finetuneExperiment.Name, finetuneExperiment.Namespace)
+			return handlererr.HandlerErr(err)
+		}
+	}
 	for i := range finetuneExperiment.Spec.FinetuneJobs {
 		finetuneJob := finetuneExperiment.Spec.FinetuneJobs[i]
-		if finetuneJob.Name == "" {
-			finetuneJob.Name = fmt.Sprintf("%s-%s-%d", finetuneExperiment.Name, "finetunejob", i+1)
-			finetuneExperiment.Spec.FinetuneJobs[i].Name = fmt.Sprintf("%s-%s-%d", finetuneExperiment.Name, "finetunejob", i+1)
-		}
 		existFinetuneJob := &finetunev1beta1.FinetuneJob{}
 		if err := r.Client.Get(ctx, types.NamespacedName{
 			Name:      finetuneJob.Name,
@@ -127,52 +150,71 @@ func (r *FinetuneExperimentReconciler) Reconcile(ctx context.Context, req ctrl.R
 			}
 		}
 	}
-	if finetuneExperiment.Status.State == finetunev1beta1.FinetuneExperimentProcessing {
-		for i := range finetuneExperiment.Spec.FinetuneJobs {
-			if finetuneExperiment.Spec.FinetuneJobs[i].Name == "" {
-				finetuneExperiment.Spec.FinetuneJobs[i].Name = fmt.Sprintf("%s-%s-%d", finetuneExperiment.Name, "finetunejob", i+1)
-			}
-			finetuneJobInstance := &finetunev1beta1.FinetuneJob{}
-			if err := r.Client.Get(ctx, types.NamespacedName{Name: finetuneExperiment.Spec.FinetuneJobs[i].Name, Namespace: finetuneExperiment.Namespace}, finetuneJobInstance); err != nil {
-				r.Log.Errorf("Get finetuneJob %s/%s failed, err: %v", finetuneExperiment.Spec.FinetuneJobs[i].Name, finetuneExperiment.Namespace, err)
-				return handlererr.HandlerErr(err)
-			}
-			if finetuneJobInstance.Status.FinetuneState == "" {
-				finetuneJobInstance.Status.State = finetunev1beta1.FinetuneJobInit
-			}
 
-			if finetuneExperiment.Status.JobsStatus == nil {
-				finetuneExperiment.Status.JobsStatus = make([]*finetunev1beta1.FinetuneJobStatusSetting, len(finetuneExperiment.Spec.FinetuneJobs))
+	success := true
+	for i := range finetuneExperiment.Spec.FinetuneJobs {
+		finetuneJobInstance := &finetunev1beta1.FinetuneJob{}
+		if err := r.Client.Get(ctx, types.NamespacedName{Name: finetuneExperiment.Spec.FinetuneJobs[i].Name, Namespace: finetuneExperiment.Namespace}, finetuneJobInstance); err != nil {
+			r.Log.Errorf("Get finetuneJob %s/%s failed, err: %v", finetuneExperiment.Spec.FinetuneJobs[i].Name, finetuneExperiment.Namespace, err)
+			return handlererr.HandlerErr(err)
+		}
+		if finetuneJobInstance.Status.FinetuneStatus == nil {
+			finetuneJobInstance.Status.FinetuneStatus = &finetunev1beta1.FinetuneStatus{
+				State: finetunev1beta1.FinetuneInit,
 			}
-			if finetuneExperiment.Status.JobsStatus[i] != nil {
-				if !reflect.DeepEqual(finetuneExperiment.Status.JobsStatus[i].FinetuneJobStatus, finetuneJobInstance.Status) {
-					finetuneExperiment.Status.JobsStatus[i] = &finetunev1beta1.FinetuneJobStatusSetting{
-						Name:              finetuneJobInstance.Name,
-						FinetuneJobStatus: finetuneJobInstance.Status,
-					}
-				}
-			} else {
+		}
+
+		if finetuneExperiment.Status.JobsStatus == nil {
+			finetuneExperiment.Status.JobsStatus = make([]*finetunev1beta1.FinetuneJobStatusSetting, len(finetuneExperiment.Spec.FinetuneJobs))
+		}
+		if finetuneExperiment.Status.JobsStatus[i] != nil {
+			r.Log.Infof("Update finetuneExperiment %s/%s status", finetuneExperiment.Namespace, finetuneExperiment.Name)
+			if !reflect.DeepEqual(finetuneExperiment.Status.JobsStatus[i].FinetuneJobStatus, finetuneJobInstance.Status) {
 				finetuneExperiment.Status.JobsStatus[i] = &finetunev1beta1.FinetuneJobStatusSetting{
 					Name:              finetuneJobInstance.Name,
 					FinetuneJobStatus: finetuneJobInstance.Status,
 				}
 			}
+		} else {
+			r.Log.Infof("Set finetuneExperiment %s/%s status", finetuneExperiment.Namespace, finetuneExperiment.Name)
+			finetuneExperiment.Status.JobsStatus[i] = &finetunev1beta1.FinetuneJobStatusSetting{
+				Name: finetuneJobInstance.Name,
+				FinetuneJobStatus: finetunev1beta1.FinetuneJobStatus{
+					State: finetunev1beta1.FinetuneJobInit,
+					FinetuneStatus: &finetunev1beta1.FinetuneStatus{
+						State: finetunev1beta1.FinetuneInit,
+					},
+				},
+			}
 		}
-		if err := r.Client.Update(ctx, finetuneExperiment); err != nil {
-			r.Log.Errorf("Update fineExperiment %s/%s failed", finetuneExperiment.Name, finetuneExperiment.Namespace)
-			return handlererr.HandlerErr(err)
-		}
-		if err := r.Client.Status().Update(ctx, finetuneExperiment); err != nil {
-			r.Log.Errorf("Update fineExperiment %s/%s status failed", finetuneExperiment.Name, finetuneExperiment.Namespace)
-			return handlererr.HandlerErr(err)
+		if finetuneJobInstance.Status.State != finetunev1beta1.FinetuneJobSuccessful {
+			success = false
 		}
 	}
-	if finetuneExperiment.Status.State == "" {
-		finetuneExperiment.Status.State = finetunev1beta1.FinetuneExperimentProcessing
-		if err := r.Client.Status().Update(ctx, finetuneExperiment); err != nil {
-			r.Log.Errorf("Update fineExperiment %s/%s status failed", finetuneExperiment.Name, finetuneExperiment.Namespace)
-			return handlererr.HandlerErr(err)
+
+	if success {
+		finetuneExperiment.Status.State = finetunev1beta1.FinetuneExperimentSuccess
+		jobs := finetuneExperiment.Status.JobsStatus
+		sort.Slice(jobs, func(i, j int) bool {
+			return util.ParseScore(jobs[i].FinetuneJobStatus.Result.Score) > util.ParseScore(jobs[j].FinetuneJobStatus.Result.Score)
+		})
+		finetuneJobBestVersion := &finetunev1beta1.FinetuneJob{}
+		if err := r.Client.Get(ctx, types.NamespacedName{Name: jobs[0].Name, Namespace: finetuneExperiment.Namespace}, finetuneJobBestVersion); err != nil {
+			r.Log.Errorf("Get finetuneJob %s/%s failed: %v", jobs[0].Name, finetuneExperiment.Namespace, err)
 		}
+		finetuneExperiment.Status.BestVersion = &finetunev1beta1.BestVersion{
+			Score:          jobs[0].FinetuneJobStatus.Result.Score,
+			Image:          jobs[0].FinetuneJobStatus.Result.Image,
+			LLM:            finetuneJobBestVersion.Spec.FineTune.FinetuneSpec.LLM,
+			Hyperparameter: finetuneJobBestVersion.Spec.FineTune.FinetuneSpec.Hyperparameter,
+			Dataset:        finetuneJobBestVersion.Spec.FineTune.FinetuneSpec.Dataset,
+		}
+		finetuneExperiment.Status.Stats = metav1.Now().Format("2006-01-02 15:04:05")
+	}
+
+	if err := r.Client.Status().Update(ctx, finetuneExperiment); err != nil {
+		r.Log.Errorf("Update fineExperiment %s/%s status failed", finetuneExperiment.Namespace, finetuneExperiment.Name)
+		return handlererr.HandlerErr(err)
 	}
 	return handlererr.HandlerErr(nil)
 }
@@ -181,25 +223,24 @@ func (r *FinetuneExperimentReconciler) Reconcile(ctx context.Context, req ctrl.R
 func (r *FinetuneExperimentReconciler) SetupWithManager(mgr ctrl.Manager) error {
 	return ctrl.NewControllerManagedBy(mgr).
 		For(&finetunev1beta1.FinetuneExperiment{}).
-		Watches(&source.Kind{Type: &finetunev1beta1.FinetuneJob{}}, &handler.EnqueueRequestForOwner{
-			OwnerType:    &finetunev1beta1.FinetuneExperiment{},
-			IsController: true,
-		}, builder.WithPredicates(predicate.Funcs{
-			UpdateFunc: func(updateEvent event.UpdateEvent) bool {
-				oldFinetuneJob := updateEvent.ObjectOld.(*finetunev1beta1.FinetuneJob)
-				newFinetuneJob := updateEvent.ObjectNew.(*finetunev1beta1.FinetuneJob)
-				if oldFinetuneJob.Status.State != newFinetuneJob.Status.State {
-					r.Log.Infof("Get finetuneJob %s/%s update event oldStatus: %s, newStatus: %s", oldFinetuneJob.Namespace, oldFinetuneJob.Name, oldFinetuneJob.Status.State, newFinetuneJob.Status.State)
-					return true
-				}
-				return false
-			},
-			CreateFunc: func(createEvent event.CreateEvent) bool {
-				finetuneJob := createEvent.Object.(*finetunev1beta1.FinetuneJob)
-				r.Log.Infof("Get finetuneJob %s/%s crate event, skip", finetuneJob.Name, finetuneJob.Namespace)
-				return false
-			},
-		})).
+		Watches(&finetunev1beta1.FinetuneJob{},
+			handler.EnqueueRequestForOwner(mgr.GetScheme(), mgr.GetRESTMapper(), &finetunev1beta1.FinetuneExperiment{}, handler.OnlyControllerOwner()),
+			builder.WithPredicates(predicate.Funcs{
+				UpdateFunc: func(updateEvent event.UpdateEvent) bool {
+					oldFinetuneJob := updateEvent.ObjectOld.(*finetunev1beta1.FinetuneJob)
+					newFinetuneJob := updateEvent.ObjectNew.(*finetunev1beta1.FinetuneJob)
+					if oldFinetuneJob.Status.State != newFinetuneJob.Status.State {
+						r.Log.Infof("Get finetuneJob %s/%s update event oldStatus: %s, newStatus: %s", oldFinetuneJob.Namespace, oldFinetuneJob.Name, oldFinetuneJob.Status.State, newFinetuneJob.Status.State)
+						return true
+					}
+					return false
+				},
+				CreateFunc: func(createEvent event.CreateEvent) bool {
+					finetuneJob := createEvent.Object.(*finetunev1beta1.FinetuneJob)
+					r.Log.Infof("Get finetuneJob %s/%s crate event, skip", finetuneJob.Name, finetuneJob.Namespace)
+					return false
+				},
+			})).
 		WithOptions(controller.Options{
 			CacheSyncTimeout:        10 * time.Second,
 			MaxConcurrentReconciles: 1}).

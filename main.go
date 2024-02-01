@@ -19,10 +19,9 @@ package main
 import (
 	"os"
 
+	"github.com/DataTunerX/finetune-experiment-controller/cmd/controller-manager/app"
 	"github.com/DataTunerX/finetune-experiment-controller/pkg/config"
 	"github.com/DataTunerX/utility-server/logging"
-
-	"github.com/DataTunerX/finetune-experiment-controller/cmd/controller-manager/app"
 	ctrl "sigs.k8s.io/controller-runtime"
 )
 

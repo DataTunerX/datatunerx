@@ -1,0 +1,1 @@
+docker build . -t rayproject/ray271-llama2-7b-finetune:20231220

@@ -4,6 +4,7 @@ import (
 	"fmt"
 
 	"github.com/DataTunerX/finetune-experiment-controller/pkg/config"
+	"github.com/DataTunerX/finetune-experiment-controller/pkg/util/label"
 	corev1beta1 "github.com/DataTunerX/meta-server/api/core/v1beta1"
 	extensionv1beta1 "github.com/DataTunerX/meta-server/api/extension/v1beta1"
 	finetunev1beta1 "github.com/DataTunerX/meta-server/api/finetune/v1beta1"
@@ -16,26 +17,20 @@ import (
 )
 
 const (
-	defaultFinetuneImage = "rayproject/ray271-llama2-7b-finetune:20231124"
 	// todo llm file path
 	defaultFinetuneCodePath = "/tmp/llama2-7b/"
-	zeroString              = ""
 
 	defaultBuildImageJobContainerName = "imagebuild"
 	defaultBuildImageJobImage         = "release.daocloud.io/datatunerx/buildimage:v0.0.1"
 )
 
 func GenerateFinetune(finetuneJob *finetunev1beta1.FinetuneJob) *finetunev1beta1.Finetune {
-	if finetuneJob.Spec.FineTune.Name == "" {
-		finetuneJob.Spec.FineTune.Name = fmt.Sprintf("%s-%s", finetuneJob.Name, "finetune")
-	}
-	if finetuneJob.Spec.FineTune.FinetuneSpec.Node <= 0 {
-		finetuneJob.Spec.FineTune.FinetuneSpec.Node = 2
-	}
+	finetuneLabel := label.GenerateInstanceLabel(finetuneJob.Name)
 	finetune := &finetunev1beta1.Finetune{
 		ObjectMeta: metav1.ObjectMeta{
 			Name:      finetuneJob.Spec.FineTune.Name,
 			Namespace: finetuneJob.Namespace,
+			Labels:    finetuneLabel,
 		},
 		Spec: finetunev1beta1.FinetuneSpec{
 			Dataset:        finetuneJob.Spec.FineTune.FinetuneSpec.Dataset,
@@ -48,23 +43,25 @@ func GenerateFinetune(finetuneJob *finetunev1beta1.FinetuneJob) *finetunev1beta1
 	if finetuneJob.Spec.FineTune.FinetuneSpec.Resource != nil {
 		finetune.Spec.Resource = finetuneJob.Spec.FineTune.FinetuneSpec.Resource
 	}
-	if finetuneJob.Spec.FineTune.FinetuneSpec.Image.Name == zeroString {
-		finetune.Spec.Image.Name = defaultFinetuneImage
+	if finetuneJob.Spec.FineTune.FinetuneSpec.Image.Name == "" {
+		finetune.Spec.Image.Name = config.GetBaseImage()
 	}
-	if finetuneJob.Spec.FineTune.FinetuneSpec.Image.Path == zeroString {
+	if finetuneJob.Spec.FineTune.FinetuneSpec.Image.Path == "" {
 		finetune.Spec.Image.Path = defaultFinetuneCodePath
 	}
 	return finetune
 }
 
-// todo(tigerK) add build image job
-func GenerateBuildImageJob(name, namespace, filePath string) *batchv1.Job {
+func GenerateBuildImageJob(filePath, imageName, imageTag string, finetuneJobInstance *finetunev1beta1.FinetuneJob) *batchv1.Job {
 	privileged := true
 	directory := corev1.HostPathDirectory
+	buildImageJobName := fmt.Sprintf("%s-buildimage", finetuneJobInstance.Name)
+	jobLabel := label.GenerateInstanceLabel(finetuneJobInstance.Name)
 	return &batchv1.Job{
 		ObjectMeta: metav1.ObjectMeta{
-			Name:      name,
-			Namespace: namespace,
+			Name:      buildImageJobName,
+			Namespace: finetuneJobInstance.Namespace,
+			Labels:    jobLabel,
 		},
 		Spec: batchv1.JobSpec{
 			Template: corev1.PodTemplateSpec{
@@ -114,16 +111,20 @@ func GenerateBuildImageJob(name, namespace, filePath string) *batchv1.Job {
 									Value: config.GetUserName(),
 								},
 								{
+									Name:  "BASE_IMAGE",
+									Value: config.GetBaseImage(),
+								},
+								{
 									Name:  "PASSWORD",
 									Value: config.GetPassword(),
 								},
 								{
 									Name:  "IMAGE_NAME",
-									Value: config.GetImageName(),
+									Value: imageName,
 								},
 								{
 									Name:  "IMAGE_TAG",
-									Value: config.GetImageTag(),
+									Value: imageTag,
 								},
 							},
 							VolumeMounts: []corev1.VolumeMount{
@@ -164,6 +165,11 @@ func GenerateRayService(name, namespace, importPath, runtimeEnv, deploymentName 
 	workReplicas := int32(1)
 	minWorkReplicas := int32(1)
 	maxWorkReplicas := int32(1)
+	if finetuneJob.Spec.ServeConfig.NodeSelector == nil {
+		finetuneJob.Spec.ServeConfig.NodeSelector = map[string]string{
+			"nvidia.com/gpu": "present",
+		}
+	}
 	return &rayv1.RayService{
 		ObjectMeta: metav1.ObjectMeta{
 			Name:      name,
@@ -300,10 +306,12 @@ func GenerateRayService(name, namespace, importPath, runtimeEnv, deploymentName 
 											Limits: map[corev1.ResourceName]resource.Quantity{
 												corev1.ResourceCPU:    resource.MustParse("8"),
 												corev1.ResourceMemory: resource.MustParse("64Gi"),
+												"nvidia.com/gpu":      resource.MustParse("1"),
 											},
 											Requests: map[corev1.ResourceName]resource.Quantity{
 												corev1.ResourceCPU:    resource.MustParse("4"),
 												corev1.ResourceMemory: resource.MustParse("32Gi"),
+												"nvidia.com/gpu":      resource.MustParse("1"),
 											},
 										},
 									},
@@ -327,12 +335,6 @@ func GenerateBuiltInScoring(name, namespace, inference string) *extensionv1beta1
 			Namespace: namespace,
 		},
 		Spec: extensionv1beta1.ScoringSpec{
-			Questions: []extensionv1beta1.Question{
-				{
-					Question:  "天王盖地虎",
-					Reference: "小鸡炖蘑菇",
-				},
-			},
 			InferenceService: inference,
 		},
 	}
