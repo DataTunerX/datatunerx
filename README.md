@@ -32,6 +32,9 @@
 
 ## 1. Dataset Management 🗄️
 Effortlessly manage datasets by supporting both *S3* protocol (*http* is coming) and local dataset uploads. Datasets are organized with splits such as test, validate, and training. Additionally, feature mapping enhances flexibility for fine-tuning jobs.
+<div align="center">
+  <img src="https://raw.githubusercontent.com/DataTunerX/datatunerx-controller/main/assets/design/datasetplugindark.png" alt="FineTune" width="30%" height="30%" />
+</div>
 
 ## 2. Fine-Tuning Experiments 🧪
 Conduct fine-tuning experiments by creating multiple fine-tuning jobs. Each job can employ different llms, datasets, and hyperparameters. Evaluate the fine-tuned models uniformly through the experiment's evaluation unit to identify the fine-tuning results.
@@ -45,9 +48,10 @@ Conduct fine-tuning experiments by creating multiple fine-tuning jobs. Each job 
 Gain detailed insights into each fine-tuning job within an experiment. Explore job details, logs, and metric visualizations, including learning rate trends, training loss, and more.
 
 ## 4. Model Repository 🗃️
-Store llms in the model repository, facilitating efficient management and deployment of inference services.
-![batch](https://raw.githubusercontent.com/DataTunerX/datatunerx-controller/main/assets/design/evalandinference.png#gh-dark-mode-only)
-![batch](https://raw.githubusercontent.com/DataTunerX/datatunerx-controller/main/assets/design/evaldark.png#gh-light-mode-only)
+Store LLMs in the model repository, facilitating efficient management and deployment of inference services.
+<div align="center">
+  <img src="https://raw.githubusercontent.com/DataTunerX/datatunerx-controller/main/assets/design/evaldark.png" alt="FineTune" width="50%" height="70%" />
+</div>
 
 ## 5. Hyperparameter Group Management 🧰
 Utilize a rich parameter configuration system with support for diverse parameters and template-based differentiation.
@@ -70,8 +74,9 @@ Leverage the plugin system for datasets and evaluation units, allowing users to 
 
 ## 2. Streamlined Batch Fine-Tuning 🔄
 - **Concurrent Task Execution:** Excels in batch fine-tuning, enabling concurrent execution of multiple tasks within a single experiment. This enhances workflow efficiency and overall productivity.
-![batch](https://raw.githubusercontent.com/DataTunerX/datatunerx-controller/main/assets/design/batch.png#gh-dark-mode-only)
-![batch](https://raw.githubusercontent.com/DataTunerX/datatunerx-controller/main/assets/design/batchdark.png#gh-light-mode-only)
+<div align="center">
+  <img src="https://raw.githubusercontent.com/DataTunerX/datatunerx-controller/main/assets/design/batchdark.png" alt="FineTuneExperiment" width="60%" />
+</div>
 ## 3. Robust Feature Set for Varied Needs 🧰
 - **Diverse Capabilities:** From dataset management to model management, ***DTX*** provides a comprehensive feature set catering to diverse fine-tuning requirements.
 
