@@ -37,9 +37,9 @@ Effortlessly manage datasets by supporting both *S3* protocol (*http* is coming)
 ## 2. Fine-Tuning Experiments 🧪
 Conduct fine-tuning experiments by creating multiple fine-tuning jobs. Each job can employ different llms, datasets, and hyperparameters. Evaluate the fine-tuned models uniformly through the experiment's evaluation unit to identify the fine-tuning results.
 <div align="center">
-  <img src="https://raw.githubusercontent.com/DataTunerX/datatunerx-controller/main/assets/design/finetune.png" alt="FineTune" width="30%" />
-  <img src="https://raw.githubusercontent.com/DataTunerX/datatunerx-controller/main/assets/design/finetunejob.png" alt="FineTuneJob" width="30%" />
-  <img src="https://raw.githubusercontent.com/DataTunerX/datatunerx-controller/main/assets/design/finetuneexperiment.png" alt="FineTuneExperiment" width="30%" />
+  <img src="https://raw.githubusercontent.com/DataTunerX/datatunerx-controller/main/assets/design/finetunedark.png" alt="FineTune" width="30%" />
+  <img src="https://raw.githubusercontent.com/DataTunerX/datatunerx-controller/main/assets/design/finetunejobdark.png" alt="FineTuneJob" width="30%" />
+  <img src="https://raw.githubusercontent.com/DataTunerX/datatunerx-controller/main/assets/design/finetuneexdark.png" alt="FineTuneExperiment" width="30%" />
 </div>
 
 ## 3. Job Insights 📊
