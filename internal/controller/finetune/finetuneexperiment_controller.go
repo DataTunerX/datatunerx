@@ -22,8 +22,8 @@ import (
 	"sort"
 	"time"
 
-	"github.com/DataTunerX/finetune-experiment-controller/pkg/util"
-	"github.com/DataTunerX/finetune-experiment-controller/pkg/util/handlererr"
+	"github.com/DataTunerX/datatunerx/pkg/util"
+	"github.com/DataTunerX/datatunerx/pkg/util/handlererr"
 	finetunev1beta1 "github.com/DataTunerX/meta-server/api/finetune/v1beta1"
 	"github.com/DataTunerX/utility-server/logging"
 	"k8s.io/apimachinery/pkg/api/errors"

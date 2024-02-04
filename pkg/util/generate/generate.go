@@ -3,8 +3,8 @@ package generate
 import (
 	"fmt"
 
-	"github.com/DataTunerX/finetune-experiment-controller/pkg/config"
-	"github.com/DataTunerX/finetune-experiment-controller/pkg/util/label"
+	"github.com/DataTunerX/datatunerx/pkg/config"
+	"github.com/DataTunerX/datatunerx/pkg/util/label"
 	corev1beta1 "github.com/DataTunerX/meta-server/api/core/v1beta1"
 	extensionv1beta1 "github.com/DataTunerX/meta-server/api/extension/v1beta1"
 	finetunev1beta1 "github.com/DataTunerX/meta-server/api/finetune/v1beta1"
