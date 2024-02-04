@@ -4,7 +4,7 @@ import (
 	"errors"
 	"time"
 
-	"github.com/DataTunerX/finetune-experiment-controller/pkg/domain/valueobject"
+	"github.com/DataTunerX/datatunerx/pkg/domain/valueobject"
 	ctrl "sigs.k8s.io/controller-runtime"
 )
 

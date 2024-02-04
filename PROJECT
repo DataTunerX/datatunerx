@@ -10,7 +10,7 @@ plugins:
   manifests.sdk.operatorframework.io/v2: {}
   scorecard.sdk.operatorframework.io/v2: {}
 projectName: finetune-experiment-controller
-repo: github.com/DataTunerX/finetune-experiment-controller
+repo: github.com/DataTunerX/datatunerx
 resources:
 - controller: true
   domain: datatunerx.io

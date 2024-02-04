@@ -4,9 +4,9 @@ import (
 	"fmt"
 	"os"
 
-	"github.com/DataTunerX/finetune-experiment-controller/cmd/controller-manager/app/options"
-	"github.com/DataTunerX/finetune-experiment-controller/internal/controller/finetune"
-	"github.com/DataTunerX/finetune-experiment-controller/pkg/util"
+	"github.com/DataTunerX/datatunerx/cmd/controller-manager/app/options"
+	"github.com/DataTunerX/datatunerx/internal/controller/finetune"
+	"github.com/DataTunerX/datatunerx/pkg/util"
 	corev1beta1 "github.com/DataTunerX/meta-server/api/core/v1beta1"
 	extensionv1beta1 "github.com/DataTunerX/meta-server/api/extension/v1beta1"
 	finetunev1beta1 "github.com/DataTunerX/meta-server/api/finetune/v1beta1"
