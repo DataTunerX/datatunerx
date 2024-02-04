@@ -3,7 +3,6 @@
 
 ![Kubernetes](https://img.shields.io/badge/kubernetes-%23326ce5.svg?style=flat&logo=kubernetes&logoColor=white)
 ![release](https://img.shields.io/badge/version-0.1.0-blue)
-![owner](https://img.shields.io/badge/daocloud.io-green)
 ![fine-tuning](https://img.shields.io/badge/fine--tuning-8B3E3)
 # Welcome 👋
 
@@ -15,7 +14,7 @@
 
 **Status**:  
 
-*Alpha (v0.1.0)* - Early development phase. [CHANGELOG](CHANGELOG.md) for details on recent updates.
+*v0.1.0* - Early development phase. [CHANGELOG](CHANGELOG.md) for details on recent updates.
 
 **Quick Demo & More Documentation**:  
 
@@ -120,5 +119,8 @@ We welcome contributions! Check out our [*CONTRIBUTING*](CONTRIBUTING.md) guidel
 
 4. **Operator SDK:**
    - [*Operator SDK*](https://sdk.operatorframework.io/): A toolkit for building Kubernetes Operators, which are applications that automate the management of custom resources in a Kubernetes cluster.
+
+5. **LLaMA-Factory:**
+   - [*LLaMA-Factory*](https://github.com/hiyouga/LLaMA-Factory): An easy-to-use llm fine-tuning framework.
 
 Feel free to explore these projects to deepen your understanding of the technologies and concepts that may have influenced or inspired this project.
