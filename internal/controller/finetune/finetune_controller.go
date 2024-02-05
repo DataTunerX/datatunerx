@@ -21,11 +21,11 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
-	"os"
 	"strconv"
 	"strings"
 	"time"
 
+	"github.com/DataTunerX/datatunerx/pkg/config"
 	corev1beta1 "github.com/DataTunerX/meta-server/api/core/v1beta1"
 	extensionv1beta1 "github.com/DataTunerX/meta-server/api/extension/v1beta1"
 	finetunev1beta1 "github.com/DataTunerX/meta-server/api/finetune/v1beta1"
@@ -55,9 +55,6 @@ const (
 	DefaultRequeueDuration = 3 * time.Second
 	CheckpointPath         = "/home/ray/checkpoint_path"
 )
-
-var metricsExportAddress = os.Getenv("METRICS_EXPORT_ADDRESS")
-var storagePath = os.Getenv("STORAGE_PATH")
 
 // FinetuneReconciler reconciles a Finetune object
 type FinetuneReconciler struct {
@@ -508,10 +505,10 @@ func getRayJobEntrypoint(ctx context.Context, finetune *finetunev1beta1.Finetune
 	entrypoint = append(entrypoint, "--gradient_accumulation_steps", fmt.Sprintf("%d", parameters.GradAccSteps))
 	entrypoint = append(entrypoint, "--fp16", fmt.Sprintf("%t", parameters.FP16))
 	entrypoint = append(entrypoint, "--num_workers", fmt.Sprintf("%d", replicas))
-	entrypoint = append(entrypoint, "--storage_path", storagePath)
+	entrypoint = append(entrypoint, "--storage_path", config.GetStoragePath())
 
-	if metricsExportAddress != "" {
-		entrypoint = append(entrypoint, "--metrics_export_address", metricsExportAddress)
+	if config.GetMetricsExportAddress() != "" {
+		entrypoint = append(entrypoint, "--metrics_export_address", config.GetMetricsExportAddress())
 		entrypoint = append(entrypoint, "--uid", fmt.Sprintf("%s", finetune.UID))
 
 	}

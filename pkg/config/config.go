@@ -21,6 +21,8 @@ func init() {
 	config.BindEnv("mountPath", "MOUNT_PATH")
 	config.BindEnv("baseImage", "BASE_IMAGE")
 	config.BindEnv("llmUrl", "LLM_URL")
+	config.BindEnv("metricsExportAddress", "METRICS_EXPORT_ADDRESS")
+	config.BindEnv("storagePath", "STORAGE_PATH")
 	config.SetDefault("llmUrl", "/tmp/llama2-7b/")
 }
 
@@ -74,4 +76,12 @@ func GetMountPath() string {
 
 func GetLLMUrl() string {
 	return config.GetString("llmUrl")
+}
+
+func GetStoragePath() string {
+	return config.GetString("storagePath")
+}
+
+func GetMetricsExportAddress() string {
+	return config.GetString("metricsExportAddress")
 }
