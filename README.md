@@ -3,11 +3,10 @@
 
 ![Kubernetes](https://img.shields.io/badge/kubernetes-%23326ce5.svg?style=flat&logo=kubernetes&logoColor=white)
 ![release](https://img.shields.io/badge/version-0.1.0-blue)
-![owner](https://img.shields.io/badge/daocloud.io-green)
 ![fine-tuning](https://img.shields.io/badge/fine--tuning-8B3E3)
 # Welcome 👋
 
-***DataTunerX (DTX)*** is designed as a cloud-native solution integrated with distributed computing frameworks. Leveraging scalable *GPU* resources, it's a platform built for efficient fine-tuning *LLMs* with a focus on practical utility. Its core strength lies in facilitating batch fine-tuning tasks, enabling users to conduct multiple tasks concurrently within a single ***experiment***. ***DTX*** encompasses essential capabilities such as ${\color{#D8CBBE}dataset \space management}$, ${\color{#BDE7BD}hyperparameter \space control}$, ${\color{#F1A7A7}fine-tuning \space workflows}$, ${\color{#BADBF4}model \space management}$, ${\color{#F4CEDB}model \space evaluation}$, ${\color{#D2E3EE}model \space comparison \space inference}$, and a ${\color{#F9E195}modular \space plugin \space system}$.
+***DataTunerX (DTX)*** is designed as a cloud-native solution integrated with distributed computing frameworks. Leveraging scalable *GPU* resources, it's a platform built for efficient fine-tuning *LLMs* with a focus on practical utility. Its core strength lies in facilitating batch fine-tuning tasks, enabling users to conduct multiple tasks concurrently within a single ***experiment***. ***DTX*** encompasses essential capabilities such as ***dataset management***, ***hyperparameter control***, ***fine-tuning workflows***, ***model management***, ***model evaluation***, ***model comparison inference***, and a ***modular plugin system***.
 
 **Technology stack**: 
 
@@ -15,7 +14,7 @@
 
 **Status**:  
 
-*Alpha (v0.1.0)* - Early development phase. [CHANGELOG](CHANGELOG.md) for details on recent updates.
+*v0.1.0* - Early development phase. [CHANGELOG](CHANGELOG.md) for details on recent updates.
 
 **Quick Demo & More Documentation**:  
 
@@ -33,22 +32,26 @@
 
 ## 1. Dataset Management 🗄️
 Effortlessly manage datasets by supporting both *S3* protocol (*http* is coming) and local dataset uploads. Datasets are organized with splits such as test, validate, and training. Additionally, feature mapping enhances flexibility for fine-tuning jobs.
+<div align="center">
+  <img src="https://raw.githubusercontent.com/DataTunerX/datatunerx-controller/main/assets/design/datasetplugindark.png" alt="FineTune" width="30%" height="30%" />
+</div>
 
 ## 2. Fine-Tuning Experiments 🧪
 Conduct fine-tuning experiments by creating multiple fine-tuning jobs. Each job can employ different llms, datasets, and hyperparameters. Evaluate the fine-tuned models uniformly through the experiment's evaluation unit to identify the fine-tuning results.
 <div align="center">
-  <img src="https://raw.githubusercontent.com/DataTunerX/datatunerx-controller/main/assets/design/finetune.png" alt="FineTune" width="30%" />
-  <img src="https://raw.githubusercontent.com/DataTunerX/datatunerx-controller/main/assets/design/finetunejob.png" alt="FineTuneJob" width="30%" />
-  <img src="https://raw.githubusercontent.com/DataTunerX/datatunerx-controller/main/assets/design/finetuneexperiment.png" alt="FineTuneExperiment" width="30%" />
+  <img src="https://raw.githubusercontent.com/DataTunerX/datatunerx-controller/main/assets/design/finetunedark.png" alt="FineTune" width="30%" />
+  <img src="https://raw.githubusercontent.com/DataTunerX/datatunerx-controller/main/assets/design/finetunejobdark.png" alt="FineTuneJob" width="30%" />
+  <img src="https://raw.githubusercontent.com/DataTunerX/datatunerx-controller/main/assets/design/finetuneexdark.png" alt="FineTuneExperiment" width="30%" />
 </div>
 
 ## 3. Job Insights 📊
 Gain detailed insights into each fine-tuning job within an experiment. Explore job details, logs, and metric visualizations, including learning rate trends, training loss, and more.
 
 ## 4. Model Repository 🗃️
-Store llms in the model repository, facilitating efficient management and deployment of inference services.
-![batch](https://raw.githubusercontent.com/DataTunerX/datatunerx-controller/main/assets/design/evalandinference.png#gh-dark-mode-only)
-![batch](https://raw.githubusercontent.com/DataTunerX/datatunerx-controller/main/assets/design/evaldark.png#gh-light-mode-only)
+Store LLMs in the model repository, facilitating efficient management and deployment of inference services.
+<div align="center">
+  <img src="https://raw.githubusercontent.com/DataTunerX/datatunerx-controller/main/assets/design/evaldark.png" alt="FineTune" width="50%" height="70%" />
+</div>
 
 ## 5. Hyperparameter Group Management 🧰
 Utilize a rich parameter configuration system with support for diverse parameters and template-based differentiation.
@@ -71,8 +74,9 @@ Leverage the plugin system for datasets and evaluation units, allowing users to 
 
 ## 2. Streamlined Batch Fine-Tuning 🔄
 - **Concurrent Task Execution:** Excels in batch fine-tuning, enabling concurrent execution of multiple tasks within a single experiment. This enhances workflow efficiency and overall productivity.
-![batch](https://raw.githubusercontent.com/DataTunerX/datatunerx-controller/main/assets/design/batch.png#gh-dark-mode-only)
-![batch](https://raw.githubusercontent.com/DataTunerX/datatunerx-controller/main/assets/design/batchdark.png#gh-light-mode-only)
+<div align="center">
+  <img src="https://raw.githubusercontent.com/DataTunerX/datatunerx-controller/main/assets/design/batchdark.png" alt="FineTuneExperiment" width="60%" />
+</div>
 ## 3. Robust Feature Set for Varied Needs 🧰
 - **Diverse Capabilities:** From dataset management to model management, ***DTX*** provides a comprehensive feature set catering to diverse fine-tuning requirements.
 
@@ -120,5 +124,8 @@ We welcome contributions! Check out our [*CONTRIBUTING*](CONTRIBUTING.md) guidel
 
 4. **Operator SDK:**
    - [*Operator SDK*](https://sdk.operatorframework.io/): A toolkit for building Kubernetes Operators, which are applications that automate the management of custom resources in a Kubernetes cluster.
+
+5. **LLaMA-Factory:**
+   - [*LLaMA-Factory*](https://github.com/hiyouga/LLaMA-Factory): An easy-to-use llm fine-tuning framework.
 
 Feel free to explore these projects to deepen your understanding of the technologies and concepts that may have influenced or inspired this project.
