@@ -6,7 +6,7 @@
 ![fine-tuning](https://img.shields.io/badge/fine--tuning-8B3E3)
 # Welcome 👋
 
-***DataTunerX (DTX)*** is designed as a cloud-native solution integrated with distributed computing frameworks. Leveraging scalable *GPU* resources, it's a platform built for efficient fine-tuning *LLMs* with a focus on practical utility. Its core strength lies in facilitating batch fine-tuning tasks, enabling users to conduct multiple tasks concurrently within a single ***experiment***. ***DTX*** encompasses essential capabilities such as ${\color{#D8CBBE}dataset \space management}$, ${\color{#BDE7BD}hyperparameter \space control}$, ${\color{#F1A7A7}fine-tuning \space workflows}$, ${\color{#BADBF4}model \space management}$, ${\color{#F4CEDB}model \space evaluation}$, ${\color{#D2E3EE}model \space comparison \space inference}$, and a ${\color{#F9E195}modular \space plugin \space system}$.
+***DataTunerX (DTX)*** is designed as a cloud-native solution integrated with distributed computing frameworks. Leveraging scalable *GPU* resources, it's a platform built for efficient fine-tuning *LLMs* with a focus on practical utility. Its core strength lies in facilitating batch fine-tuning tasks, enabling users to conduct multiple tasks concurrently within a single ***experiment***. ***DTX*** encompasses essential capabilities such as ***dataset management***, ***hyperparameter control***, ***fine-tuning workflows***, ***model management***, ***model evaluation***, ***model comparison inference***, and a ***modular plugin system***.
 
 **Technology stack**: 
 
