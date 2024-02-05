@@ -34,7 +34,7 @@ const (
 	SecretName     = "datatunerx-cert"
 	CaName         = "datatunerx-ca"
 	CaOrganization = "datatunerx"
-	ServiceName    = "finetune-experiment"
+	ServiceName    = "datatunerx"
 )
 
 var (
