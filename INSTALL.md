@@ -16,7 +16,7 @@
 1. Download the dtx-ctl command-line tool:
 
 ```bash
-wget
+wget https://github.com/DataTunerX/dtx-ctl/releases/download/v0.1/dtx-ctl.tar.gz
 ```
 
 2. Import base images:
@@ -55,7 +55,7 @@ dtx-ctl install <name> -f config.yaml
 1. Download the dtx-ctl command-line tool:
 
 ```bash
-wget
+wget https://github.com/DataTunerX/dtx-ctl/releases/download/v0.1/dtx-ctl.tar.gz
 ```
 
 2. Import base images:
