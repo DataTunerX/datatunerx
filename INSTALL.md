@@ -63,10 +63,10 @@ Deploy with default settings, configure your image repository, or use a configur
 - **Parent Command Usage**:
 
 ```bash
-completion  Generate the autocompletion script for the specified shell
-help        Help about any command
-install     Install datatunerx by helm on kubernetes
-uninstall   unInstall datatunerx by helm on kubernetes
+--completion  Generate the autocompletion script for the specified shell
+--help        Help about any command
+--install     Install datatunerx by helm on kubernetes
+--uninstall   unInstall datatunerx by helm on kubernetes
 ```
 
 - **Subcommands and Flags**:
