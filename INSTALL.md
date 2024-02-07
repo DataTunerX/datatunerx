@@ -7,18 +7,18 @@ This guide provides detailed instructions for deploying DataTunerX in both onlin
 
 Before starting, ensure your system meets the following requirements:
 
-- Kubernetes v1.19+.
-- An S3-compatible object storage like Minio for storing large datasets and models.
-- A container image registry such as Harbor for securely storing and managing container images.
-- Helm, the Kubernetes package manager, for deploying and managing applications.
+- **Kubernetes v1.19+**: The container orchestration system for automating software deployment, scaling, and management.
+- **Minio** or another S3-compatible object storage: For storing large datasets and models.
+- **Harbor** or another container image registry: For securely storing and managing container images.
+- **Helm**: The Kubernetes package manager for deploying and managing applications.
 
 ## Deployment Artifacts
 
 Required artifacts:
 
 - `dtx-ctl` DataTunerX deployment tool.
-- `images-ai.tar`: Mandatory large model offline image package.
-- `images.tar`: Optional business component offline image package.
+- `images-ai.tar`: Mandatory large model offline image package. (Download link needed)
+- `images.tar`: Optional business component offline image package. (Download link needed)
 
 ## Online Deployment
 
@@ -35,7 +35,7 @@ wget https://github.com/DataTunerX/dtx-ctl/releases/download/v0.1.0/dtx-ctl.tar.
 wget [Your-Base-AI-Image-Package-Download-Link]
 ```
 
-### 3. Import Base AI Images
+### 3. Import Base Images
 
 Transfer the `images-ai.tar` package to a node with a GPU:
 
