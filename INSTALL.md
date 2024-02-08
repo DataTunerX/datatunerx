@@ -31,8 +31,8 @@ wget https://github.com/DataTunerX/dtx-ctl/releases/download/v0.1.0/dtx-ctl.tar.
 ### 2. Download Base AI Images
 
 ```bash
-# Placeholder for the actual command to download the base AI images
-wget [Your-Base-AI-Image-Package-Download-Link]
+# Placeholder for the actual command to download the base AI images, currently the link is valid for 24 hours, if you need to apply for the download package please mention issuer
+wget https://public-download.daocloud.io/datatunerx/v0.1.0/images-ai?e=1707494419&token=MHV7x1flrG19kzrdBNfPPO7JpBjTr__AMGzOtlq1:baoxU3v6Rxc0D4oe03vqy1UOtX4=
 ```
 
 ### 3. Import Base Images
@@ -88,15 +88,15 @@ wget https://github.com/DataTunerX/dtx-ctl/releases/download/v0.1.0/dtx-ctl.tar.
 ### 2. Download Base Images
 
 ```bash
-# Placeholder for the actual command to download the base AI images
-wget [Your-Base-Image-Package-Download-Link]
+# Placeholder for the actual command to download the base AI images, currently the link is valid for 24 hours, if you need to apply for the download package please mention issuer
+wget https://public-download.daocloud.io/datatunerx/v0.1.0/images?e=1707494602&token=MHV7x1flrG19kzrdBNfPPO7JpBjTr__AMGzOtlq1:AMHPfy7lcwiHA8beviPoGl6vi9s=
 ```
 
 ### 3. Download Base AI Images
 
 ```bash
-# Placeholder for the actual command to download the base AI images
-wget [Your-Base-AI-Image-Package-Download-Link]
+# Placeholder for the actual command to download the base AI images, currently the link is valid for 24 hours, if you need to apply for the download package please mention issuer
+wget https://public-download.daocloud.io/datatunerx/v0.1.0/images-ai?e=1707494419&token=MHV7x1flrG19kzrdBNfPPO7JpBjTr__AMGzOtlq1:baoxU3v6Rxc0D4oe03vqy1UOtX4=
 ```
 
 ### 4. Unzip and Import Business Image Package
