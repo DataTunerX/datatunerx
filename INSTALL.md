@@ -17,8 +17,8 @@ Before starting, ensure your system meets the following requirements:
 Required artifacts:
 
 - `dtx-ctl` DataTunerX deployment tool.
-- `images-ai.tar`: Mandatory large model offline image package. (Download link needed)
-- `images.tar`: Optional business component offline image package. (Download link needed)
+- `images-ai.tar`: Mandatory large model offline image package. (The image size is 47.1GB)
+- `images.tar`: Optional business component offline image package.
 
 ## Online Deployment
 
@@ -79,7 +79,27 @@ dtx-ctl install <name> -f /path/to/your/config.yaml
 
 Follow the online deployment steps for downloading the `dtx-ctl` tool and base images. Additionally, handle the business component images as follows:
 
-### 3. Unzip and Import Business Image Package
+### 1. Download the `dtx-ctl` Tool
+
+```bash
+wget https://github.com/DataTunerX/dtx-ctl/releases/download/v0.1.0/dtx-ctl.tar.gz
+```
+
+### 2. Download Base Images
+
+```bash
+# Placeholder for the actual command to download the base AI images
+wget [Your-Base-Image-Package-Download-Link]
+```
+
+### 3. Download Base AI Images
+
+```bash
+# Placeholder for the actual command to download the base AI images
+wget [Your-Base-AI-Image-Package-Download-Link]
+```
+
+### 4. Unzip and Import Business Image Package
 
 ```bash
 tar -zxcf images.tar -C /path/to/unzip
@@ -98,14 +118,14 @@ For Containerd:
 ctr -n k8s.io images import /path/to/image.tar
 ```
 
-### 4. Modify Image Tags and Push to Your Image Repository
+### 5. Modify Image Tags and Push to Your Image Repository
 
 ```bash
 docker tag source_image:tag target_repository/target_image:tag
 docker push target_repository/target_image:tag
 ```
 
-### 5. Deploy DataTunerX
+### 6. Deploy DataTunerX
 
 Deploy using custom settings to configure your image repository:
 

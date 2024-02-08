@@ -152,6 +152,7 @@ func (r *FinetuneExperimentReconciler) Reconcile(ctx context.Context, req ctrl.R
 	}
 
 	success := true
+	failed := true
 	for i := range finetuneExperiment.Spec.FinetuneJobs {
 		finetuneJobInstance := &finetunev1beta1.FinetuneJob{}
 		if err := r.Client.Get(ctx, types.NamespacedName{Name: finetuneExperiment.Spec.FinetuneJobs[i].Name, Namespace: finetuneExperiment.Namespace}, finetuneJobInstance); err != nil {
@@ -190,6 +191,9 @@ func (r *FinetuneExperimentReconciler) Reconcile(ctx context.Context, req ctrl.R
 		if finetuneJobInstance.Status.State != finetunev1beta1.FinetuneJobSuccessful {
 			success = false
 		}
+		if finetuneJobInstance.Status.State != finetunev1beta1.FinetuneJobFailed {
+			failed = false
+		}
 	}
 
 	if success {
@@ -209,6 +213,9 @@ func (r *FinetuneExperimentReconciler) Reconcile(ctx context.Context, req ctrl.R
 			Hyperparameter: finetuneJobBestVersion.Spec.FineTune.FinetuneSpec.Hyperparameter,
 			Dataset:        finetuneJobBestVersion.Spec.FineTune.FinetuneSpec.Dataset,
 		}
+		finetuneExperiment.Status.Stats = metav1.Now().Format("2006-01-02 15:04:05")
+	} else if failed {
+		finetuneExperiment.Status.State = finetunev1beta1.FinetuneExperimentFailed
 		finetuneExperiment.Status.Stats = metav1.Now().Format("2006-01-02 15:04:05")
 	}
 
