@@ -1,150 +1,173 @@
-## Prerequisites:
 
-- Kubernetes v1.19+
-- Minio (or other object storage supporting S3 protocol)
-- Harbor (or other image repository)
-- Helm
+# DataTunerX Comprehensive Deployment Guide
 
-## Deployment Artifacts:
+This guide provides detailed instructions for deploying DataTunerX in both online and offline environments. Ensure all prerequisites are met before proceeding with the deployment.
 
-- dtx-ctl DataTunerX deployment tool
-- images-ai.tar Large model offline image package (mandatory)
-- images.tar Business component offline image package (optional)
+## Prerequisites
 
-## Online Deployment:
+Before starting, ensure your system meets the following requirements:
 
-1. Download the dtx-ctl command-line tool:
+- **Kubernetes v1.19+**: The container orchestration system for automating software deployment, scaling, and management.
+- **Minio** or another S3-compatible object storage: For storing large datasets and models.
+- **Harbor** or another container image registry: For securely storing and managing container images.
+- **Helm**: The Kubernetes package manager for deploying and managing applications.
+
+## Deployment Artifacts
+
+Required artifacts:
+
+- `dtx-ctl` DataTunerX deployment tool.
+- `images-ai.tar`: Mandatory large model offline image package. (The image size is 47.1GB)
+- `images.tar`: Optional business component offline image package.
+
+## Online Deployment
+
+### 1. Download the `dtx-ctl` Tool
 
 ```bash
-wget https://github.com/DataTunerX/dtx-ctl/releases/download/v0.1/dtx-ctl.tar.gz
+wget https://github.com/DataTunerX/dtx-ctl/releases/download/v0.1.0/dtx-ctl.tar.gz
 ```
 
-2. Import base images:
-
-   Transfer the large model image from the image package to a node with a GPU:
-
-   ```bash
-   scp images-ai.tar user@ip:/path/
-   ```
-
-   - For Docker container runtime:
-
-   ```bash
-   docker load -i images-ai.tar
-   ```
-
-   - For Containerd container runtime:
-
-   ```bash
-   ctr -n k8s.io images import images-ai.tar
-   ```
-
-3. Deploy DataTunerX using dtx-ctl:
+### 2. Download Base AI Images
 
 ```bash
-## Install datatunerx with default settings
-dtx-ctl install 
-## Install datatunerx with custom settings
-dtx-ctl install <name> -n <namespace> --set 
-## Install datatunerx using a configuration file
-dtx-ctl install <name> -f config.yaml
+# Placeholder for the actual command to download the base AI images
+wget [Your-Base-AI-Image-Package-Download-Link]
 ```
 
-## Offline Deployment:
+### 3. Import Base Images
 
-1. Download the dtx-ctl command-line tool:
+Transfer the `images-ai.tar` package to a node with a GPU:
 
 ```bash
-wget https://github.com/DataTunerX/dtx-ctl/releases/download/v0.1/dtx-ctl.tar.gz
+scp images-ai.tar user@ip:/path/
 ```
 
-2. Import base images:
-
-   Transfer the large model image from the image package to a node with a GPU:
-
-   ```bash
-   scp images-ai.tar user@ip:/path/
-   ```
-
-   - For Docker container runtime:
-
-   ```bash
-   docker load -i images-ai.tar
-   ```
-
-   - For Containerd container runtime:
-
-   ```bash
-   ctr -n k8s.io images import images-ai.tar
-   ```
-
-   3. Unzip the business image package on the current machine node:
-
-   ```bash
-   tar -zxcf images.tar
-   ## Enter the extracted image folder
-   cd images
-   ## Import all images in the current directory
-   ## For Docker container runtime:
-   docker load -i current_folder_directory
-   ## For Containerd container runtime:
-   ctr -n k8s.io images import images.tar
-   ```
-
-   4. If you have an image repository, modify the image tag and push it to your image repository:
-
-   ```bash
-   docker tag registry/repository/image:tag yourregistry/yourrepository/image:tag
-   docker push yourregistry/yourrepository/image:tag
-   ```
-
-3. Deploy DataTunerX using dtx-ctl:
+For Docker:
 
 ```bash
-## Install datatunerx with default settings
-dtx-ctl install 
-## Install datatunerx with custom settings, configure your image repository address and repository
-dtx-ctl install <name> -n <namespace> --registry=registry.cn-hangzhou.aliyuncs.com --repository=datatunerx
-## Install datatunerx using a configuration file
-dtx-ctl install <name> -f config.yaml
+docker load -i /path/images-ai.tar
 ```
 
-## Command Line Command List:
-
-- Parent command:
+For Containerd:
 
 ```bash
-Usage:
-  dtx-ctl [flags]
-  dtx-ctl [command]
-
-Available Commands:
-  completion  Generate the autocompletion script for the specified shell
-  help        Help about any command
-  install     Install datatunerx by helm on kubernetes
-  uninstall   unInstall datatunerx by helm on kubernetes
+ctr -n k8s.io images import /path/images-ai.tar
 ```
 
-- Subcommands
+### 4. Deploy DataTunerX
+
+Deploy with default settings:
 
 ```bash
-      --chart-directory string     Helm chart directory
-      --dry-run                    Simulate an install
-      --image-file-dir string      Specify an image file dir for the chart version to use. For example, --image-file-dir=/tmp 
-      --image-file-dir=/tmp 
-      --image-pull-policy string   Specify an image pull policy for the chart version to use. For example, --image-pull-policy=Always 
-      --image-pull-secret string   Specify an image pull secret for the chart version to use. For example, --image-pull-secret=datatunerx 
-      --push                       Specify a push for the chart version to use. For example, --push=true 
-      --registry string            Specify a registry for the chart version to use. For example, --registry=registry.cn-hangzhou.aliyuncs.com 
-      --repository string          Specify a repository for the chart version to use. For example, --repository=datatunerx 
-      --set stringArray            Set helm values on the command line (can specify multiple or separate values with commas: key1=val1,key2=val2)
-      --set-file stringArray       Set helm values from respective files specified via the command line (can specify multiple or separate values with commas: key1=path1,key2=path2)
-      --set-string stringArray     Set helm STRING values on the command line (can specify multiple or separate values with commas: key1=val1,key2=val2)
-  -f, --values strings             Specify helm values in a YAML file or a URL (can specify multiple)
-      --version string             Specify a version constraint for the chart version to use. For example, --version=0.0.1 (default "0.0.1")
-      --wait                       Wait for installation to have completed
-      --wait-duration duration     Maximum time to wait for resources to be ready (default 5m0s)
+dtx-ctl install
+```
 
-Global Flags:
-      --context string     Kubernetes configuration context
-  -n, --namespace string   Namespace datatunerx is running in (default "datatunerx-dev")
+Or, with custom settings:
+
+```bash
+dtx-ctl install <name> -n <namespace> --set [Your-Custom-Settings]
+```
+
+Or, using a configuration file:
+
+```bash
+dtx-ctl install <name> -f /path/to/your/config.yaml
+```
+
+## Offline Deployment
+
+Follow the online deployment steps for downloading the `dtx-ctl` tool and base images. Additionally, handle the business component images as follows:
+
+### 1. Download the `dtx-ctl` Tool
+
+```bash
+wget https://github.com/DataTunerX/dtx-ctl/releases/download/v0.1.0/dtx-ctl.tar.gz
+```
+
+### 2. Download Base Images
+
+```bash
+# Placeholder for the actual command to download the base AI images
+wget [Your-Base-Image-Package-Download-Link]
+```
+
+### 3. Download Base AI Images
+
+```bash
+# Placeholder for the actual command to download the base AI images
+wget [Your-Base-AI-Image-Package-Download-Link]
+```
+
+### 4. Unzip and Import Business Image Package
+
+```bash
+tar -zxcf images.tar -C /path/to/unzip
+cd /path/to/unzip/images
+```
+
+For Docker:
+
+```bash
+docker load -i /path/to/image.tar
+```
+
+For Containerd:
+
+```bash
+ctr -n k8s.io images import /path/to/image.tar
+```
+
+### 5. Modify Image Tags and Push to Your Image Repository
+
+```bash
+docker tag source_image:tag target_repository/target_image:tag
+docker push target_repository/target_image:tag
+```
+
+### 6. Deploy DataTunerX
+
+Deploy using custom settings to configure your image repository:
+
+```bash
+dtx-ctl install <name> -n <namespace> --registry=your_registry --repository=your_repository
+```
+
+Or, using a configuration file:
+
+```bash
+dtx-ctl install <name> -f /path/to/your/config.yaml
+```
+
+## Command-Line Command List
+
+Commands to interact with `dtx-ctl`, including flags and subcommands for installation and management:
+
+```bash
+# General usage
+dtx-ctl [command]
+
+# Available Commands
+completion  Generate the autocompletion script for the specified shell
+help        Help about any command
+install     Install DataTunerX on Kubernetes
+uninstall   Uninstall DataTunerX from Kubernetes
+
+# Flags for installation
+--chart-directory string     Helm chart directory
+--dry-run                    Simulate an install
+--image-file-dir string      Specify an image file directory
+--image-pull-policy string   Image pull policy
+--image-pull-secret string   Image pull secret
+--registry string            Container registry
+--repository string          Container repository
+--set stringArray            Set helm values
+--set-file stringArray       Set helm values from files
+--set-string stringArray     Set helm STRING values
+-f, --values strings         Specify helm values in a YAML file
+--version string             Chart version
+--wait                       Wait for installation completion
+--wait-duration duration     Maximum time to wait for resource readiness
+```
+
+Please replace placeholders with actual values and download links as required.
