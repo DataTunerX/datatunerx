@@ -89,7 +89,7 @@ wget https://github.com/DataTunerX/dtx-ctl/releases/download/v0.1.0/dtx-ctl.tar.
 
 ```bash
 # Placeholder for the actual command to download the base AI images, currently the link is valid for 24 hours, if you need to apply for the download package please mention issuer
-wget https://public-download.daocloud.io/datatunerx/v0.1.0/images?e=1707494602&token=MHV7x1flrG19kzrdBNfPPO7JpBjTr__AMGzOtlq1:AMHPfy7lcwiHA8beviPoGl6vi9s=
+wget https://public-download.daocloud.io/datatunerx/v0.1.0/images?e=1707542434&token=MHV7x1flrG19kzrdBNfPPO7JpBjTr__AMGzOtlq1:Ro_FMrM26IlCXV98tODcd79foxQ=
 ```
 
 ### 3. Download Base AI Images
