@@ -18,8 +18,12 @@
 
 **Quick Demo & More Documentation**:  
 
-- [Demo](https://github.com/DataTunerX/datatunerx-controller) (COMING SOON)
-
+- Demo
+<div align="center">
+      <a href="https://www.youtube.com/watch?v=NvOzKj67oRQ">
+         <img src="https://img.youtube.com/vi/NvOzKj67oRQ/maxresdefault.jpg" style="width:50%;">
+      </a>
+</div>
 - [Documentation](https://github.com/DataTunerX/datatunerx-controller) (COMING SOON)
 
 **Screenshot**:
@@ -31,7 +35,7 @@
 ***DTX*** empowers users with a robust set of features designed for efficient fine-tuning of large language models. Dive into the capabilities that make ***DTX*** a versatile platform:
 
 ## 1. Dataset Management 🗄️
-Effortlessly manage datasets by supporting both *S3* protocol (*http* is coming) and local dataset uploads. Datasets are organized with splits such as test, validate, and training. Additionally, feature mapping enhances flexibility for fine-tuning jobs.
+Effortlessly manage datasets by supporting both *S3* protocol (*http* is coming) and local dataset uploads. Datasets are organized with splits such as test, validation, and training. Additionally, feature mapping enhances flexibility for fine-tuning jobs.
 <div align="center">
   <img src="https://raw.githubusercontent.com/DataTunerX/datatunerx-controller/main/assets/design/datasetplugindark.png" alt="FineTune" width="30%" height="30%" />
 </div>
