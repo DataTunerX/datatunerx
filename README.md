@@ -82,6 +82,7 @@ Leverage the plugin system for datasets and evaluation units, allowing users to 
 <div align="center">
   <img src="https://raw.githubusercontent.com/DataTunerX/datatunerx-controller/main/assets/design/batchdark.png" alt="FineTuneExperiment" width="60%" />
 </div>
+
 ## 3. Robust Feature Set for Varied Needs 🧰
 - **Diverse Capabilities:** From dataset management to model management, ***DTX*** provides a comprehensive feature set catering to diverse fine-tuning requirements.
 
