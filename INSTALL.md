@@ -17,7 +17,7 @@ Before starting, ensure your system meets the following requirements:
 Required artifacts:
 
 - `dtx-ctl` DataTunerX deployment tool.
-- `images-ai.tar`: Mandatory large model offline image package. (The image size is 47.1GB)
+- `images-ai.tar`: Optional llm offline image package. (The image size is 47.1GB)
 - `images.tar`: Optional business component offline image package.
 
 ## Online Deployment
@@ -28,34 +28,7 @@ Required artifacts:
 wget https://github.com/DataTunerX/dtx-ctl/releases/download/v0.1.0/dtx-ctl.tar.gz
 ```
 
-### 2. Download Base AI Images
-
-```bash
-# Placeholder for the actual command to download the base AI images, currently the link is valid for 24 hours, if you need to apply for the download package please mention issuer
-wget https://public-download.daocloud.io/datatunerx/v0.1.0/images-ai?e=1707494419&token=MHV7x1flrG19kzrdBNfPPO7JpBjTr__AMGzOtlq1:baoxU3v6Rxc0D4oe03vqy1UOtX4=
-```
-
-### 3. Import Base Images
-
-Transfer the `images-ai.tar` package to a node with a GPU:
-
-```bash
-scp images-ai.tar user@ip:/path/
-```
-
-For Docker:
-
-```bash
-docker load -i /path/images-ai.tar
-```
-
-For Containerd:
-
-```bash
-ctr -n k8s.io images import /path/images-ai.tar
-```
-
-### 4. Deploy DataTunerX
+### 2. Deploy DataTunerX
 
 Deploy with default settings:
 
@@ -89,14 +62,14 @@ wget https://github.com/DataTunerX/dtx-ctl/releases/download/v0.1.0/dtx-ctl.tar.
 
 ```bash
 # Placeholder for the actual command to download the base AI images, currently the link is valid for 24 hours, if you need to apply for the download package please mention issuer
-wget https://public-download.daocloud.io/datatunerx/v0.1.0/images?e=1707542434&token=MHV7x1flrG19kzrdBNfPPO7JpBjTr__AMGzOtlq1:Ro_FMrM26IlCXV98tODcd79foxQ=
+wget https://public-download.daocloud.io/datatunerx/v0.1.0/images?e=1708664238&token=MHV7x1flrG19kzrdBNfPPO7JpBjTr__AMGzOtlq1:sZrIxT02pubO4BhPunS3sky3Fss=
 ```
 
 ### 3. Download Base AI Images
 
 ```bash
 # Placeholder for the actual command to download the base AI images, currently the link is valid for 24 hours, if you need to apply for the download package please mention issuer
-wget https://public-download.daocloud.io/datatunerx/v0.1.0/images-ai?e=1707494419&token=MHV7x1flrG19kzrdBNfPPO7JpBjTr__AMGzOtlq1:baoxU3v6Rxc0D4oe03vqy1UOtX4=
+wget https://public-download.daocloud.io/datatunerx/v0.1.0/images-ai?e=1708594433&token=MHV7x1flrG19kzrdBNfPPO7JpBjTr__AMGzOtlq1:DySesLobN0I7NeCBcYuZ74P8osA=
 ```
 
 ### 4. Unzip and Import Business Image Package
